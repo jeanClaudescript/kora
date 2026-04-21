@@ -19,6 +19,7 @@ import { BusinessBookingsPage } from './pages/business/BusinessBookingsPage'
 import { BusinessMessagesPage } from './pages/business/BusinessMessagesPage'
 import { BusinessGrowthPage } from './pages/business/BusinessGrowthPage'
 import { BusinessInsightsPage } from './pages/business/BusinessInsightsPage'
+import { BusinessWorkspacesPage } from './pages/business/BusinessWorkspacesPage'
 import { AdminHomePage } from './pages/admin/AdminHomePage'
 import { AdminBusinessesPage } from './pages/admin/AdminBusinessesPage'
 import { AdminUsersPage } from './pages/admin/AdminUsersPage'
@@ -60,6 +61,7 @@ export default function App() {
         <Route path="bookings" element={<BusinessBookingsPage />} />
         <Route path="messages" element={<BusinessMessagesPage />} />
         <Route path="growth" element={<BusinessGrowthPage />} />
+        <Route path="workspaces" element={<BusinessWorkspacesPage />} />
       </Route>
 
       <Route

@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
 import { categories, listings } from '../data/catalog'
 import { ListingCard } from '../components/marketplace/ListingCard'
 import { IconSearch } from '../components/icons'
+import { useAuth } from '../auth/AuthContext'
 
 function categoryLabel(id: string, t: (key: string) => string) {
   const key = `home.cat_${id}`
@@ -15,14 +16,36 @@ function categoryLabel(id: string, t: (key: string) => string) {
 export function HomePage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [q, setQ] = useState('')
   const [city, setCity] = useState('Kigali')
+  const [pickedCategory, setPickedCategory] = useState('all')
+
+  const personalizedCategories = useMemo(() => {
+    const source = categories.slice(1)
+    const interests = new Set(user?.interestCategories ?? [])
+    const preferredCity = (user?.preferredCity ?? city).toLowerCase()
+    const demandByCategory = new Map<string, number>()
+    for (const listing of listings) {
+      const current = demandByCategory.get(listing.category) ?? 0
+      demandByCategory.set(listing.category, current + (listing.city.toLowerCase() === preferredCity ? 2 : 1))
+    }
+
+    return [...source].sort((a, b) => {
+      const ai = interests.has(a.id) ? 4 : 0
+      const bi = interests.has(b.id) ? 4 : 0
+      const ad = demandByCategory.get(a.id) ?? 0
+      const bd = demandByCategory.get(b.id) ?? 0
+      return bi + bd - (ai + ad)
+    })
+  }, [city, user])
 
   function onHeroSubmit(e: FormEvent) {
     e.preventDefault()
     const p = new URLSearchParams()
     if (q.trim()) p.set('q', q.trim())
     if (city.trim()) p.set('city', city.trim())
+    if (pickedCategory !== 'all') p.set('category', pickedCategory)
     navigate(`/search?${p.toString()}`)
   }
 
@@ -128,15 +151,20 @@ export function HomePage() {
               </button>
             </div>
             <div className="mt-3 flex flex-wrap gap-2">
-              {categories.slice(1, 6).map((c) => (
-                <Link
+              {personalizedCategories.slice(0, 6).map((c) => (
+                <button
                   key={c.id}
-                  to={`/search?category=${encodeURIComponent(c.id)}`}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-ink-700 hover:border-brand-300 hover:bg-brand-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-brand-500 dark:hover:bg-brand-950/40"
+                  type="button"
+                  onClick={() => setPickedCategory(c.id)}
+                  className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold transition ${
+                    pickedCategory === c.id
+                      ? 'border-brand-500 bg-brand-600 text-white'
+                      : 'border-slate-200 bg-white text-ink-700 hover:border-brand-300 hover:bg-brand-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-brand-500 dark:hover:bg-brand-950/40'
+                  }`}
                 >
                   <span>{c.icon}</span>
                   {categoryLabel(c.id, t)}
-                </Link>
+                </button>
               ))}
             </div>
           </form>
@@ -151,36 +179,61 @@ export function HomePage() {
       </section>
 
       <section className="mx-auto max-w-7xl px-4 py-10">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h2 className="text-xl font-bold tracking-tight text-ink-900 dark:text-white sm:text-2xl">
+        <div className="grid gap-5 lg:grid-cols-[minmax(280px,32%)_1fr]">
+          <aside className="kora-card rounded-3xl p-3.5 lg:sticky lg:top-[5.5rem] lg:self-start">
+            <h2 className="text-base font-bold tracking-tight text-ink-900 dark:text-white">
               {t('home.categoriesTitle')}
             </h2>
-            <p className="mt-1 text-sm text-ink-500 dark:text-slate-400">
-              {t('home.categoriesHint')}
-            </p>
+            <p className="mt-1 text-sm text-ink-500 dark:text-slate-400">{t('home.categoriesHint')}</p>
+            <div className="mt-4 max-h-[70vh] space-y-2 overflow-y-auto pr-1">
+              {personalizedCategories.map((c) => (
+                <Link
+                  key={`aside-${c.id}`}
+                  to={`/search?category=${encodeURIComponent(c.id)}`}
+                  className="flex items-center justify-between rounded-xl border border-[var(--kora-line)] bg-[var(--kora-elevated)] px-3 py-2.5 transition hover:border-brand-400"
+                >
+                  <span className="flex items-center gap-2 text-sm font-semibold text-[var(--kora-text)]">
+                    <span>{c.icon}</span>
+                    {categoryLabel(c.id, t)}
+                  </span>
+                  <span className="text-xs text-[var(--kora-muted)]">›</span>
+                </Link>
+              ))}
+            </div>
+          </aside>
+          <div>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <h2 className="text-xl font-bold tracking-tight text-ink-900 dark:text-white sm:text-2xl">
+                  Popular categories for you
+                </h2>
+                <p className="mt-1 text-sm text-ink-500 dark:text-slate-400">
+                  Ranked from your activity, location, and marketplace demand.
+                </p>
+              </div>
+              <Link
+                to="/search"
+                className="text-sm font-semibold text-brand-700 hover:underline dark:text-brand-400"
+              >
+                {t('home.viewAll')} →
+              </Link>
+            </div>
+            <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
+              {personalizedCategories.slice(0, 12).map((c) => (
+                <Link
+                  key={c.id}
+                  to={`/search?category=${encodeURIComponent(c.id)}`}
+                  className="flex flex-col items-center gap-2 rounded-2xl border border-slate-200 bg-white p-4 text-center shadow-card transition hover:border-brand-300 hover:shadow-lift dark:border-slate-700 dark:bg-slate-900 dark:hover:border-brand-500 sm:p-5"
+                >
+                  <span className="text-2xl sm:text-3xl">{c.icon}</span>
+                  <span className="text-sm font-bold text-ink-900 dark:text-white">
+                    {categoryLabel(c.id, t)}
+                  </span>
+                  <span className="text-xs text-ink-500 dark:text-slate-400">{t('home.seeTop')}</span>
+                </Link>
+              ))}
+            </div>
           </div>
-          <Link
-            to="/search"
-            className="text-sm font-semibold text-brand-700 hover:underline dark:text-brand-400"
-          >
-            {t('home.viewAll')} →
-          </Link>
-        </div>
-        <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-          {categories.slice(1).map((c) => (
-            <Link
-              key={c.id}
-              to={`/search?category=${encodeURIComponent(c.id)}`}
-              className="flex flex-col items-center gap-2 rounded-2xl border border-slate-200 bg-white p-4 text-center shadow-card transition hover:border-brand-300 hover:shadow-lift dark:border-slate-700 dark:bg-slate-900 dark:hover:border-brand-500 sm:p-5"
-            >
-              <span className="text-2xl sm:text-3xl">{c.icon}</span>
-              <span className="text-sm font-bold text-ink-900 dark:text-white">
-                {categoryLabel(c.id, t)}
-              </span>
-              <span className="text-xs text-ink-500 dark:text-slate-400">{t('home.seeTop')}</span>
-            </Link>
-          ))}
         </div>
       </section>
 

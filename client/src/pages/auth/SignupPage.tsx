@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import type { UserRole } from '../../auth/AuthContext'
 import { useAuth } from '../../auth/AuthContext'
+import { categories } from '../../data/catalog'
 
 export function SignupPage() {
   const { t } = useTranslation()
@@ -16,6 +17,9 @@ export function SignupPage() {
   const [role, setRole] = useState<UserRole>(() =>
     searchParams.get('role') === 'business' ? 'business' : 'customer',
   )
+  const [businessCategory, setBusinessCategory] = useState('Salon')
+  const [workerCount, setWorkerCount] = useState(10)
+  const [preferredCity, setPreferredCity] = useState('Kigali')
 
   function onSubmit(e: FormEvent) {
     e.preventDefault()
@@ -24,20 +28,24 @@ export function SignupPage() {
       name: name.trim() || 'New user',
       email: email.trim() || 'user@kora.app',
       role,
+      preferredCity: preferredCity.trim() || 'Kigali',
+      businessCategory: role === 'business' ? businessCategory : undefined,
+      businessWorkerCount: role === 'business' ? workerCount : undefined,
+      interestCategories: role === 'business' ? [businessCategory] : ['Salon', 'Barber', 'Spa'],
     })
     if (role === 'business') navigate('/business', { replace: true })
-    else if (role === 'admin') navigate('/admin', { replace: true })
     else navigate('/', { replace: true })
   }
 
   return (
-    <div className="kora-card w-full max-w-[440px] rounded-3xl p-6 sm:p-8">
+    <div className="kora-card w-full max-w-[520px] rounded-3xl p-5 sm:p-6">
       <h1 className="text-center text-2xl font-black tracking-tight text-[var(--kora-text)]">
         {t('auth.signupTitle')}
       </h1>
       <p className="mt-2 text-center text-sm text-[var(--kora-text-secondary)]">{t('auth.signupSubtitle')}</p>
 
-      <form onSubmit={onSubmit} className="mt-8 space-y-4">
+      <form onSubmit={onSubmit} className="mt-6 space-y-3.5">
+        <div className="grid gap-3 sm:grid-cols-2">
         <label className="block">
           <span className="text-xs font-bold uppercase tracking-wide text-[var(--kora-muted)]">
             {t('auth.fullName')}
@@ -63,6 +71,19 @@ export function SignupPage() {
             autoComplete="email"
           />
         </label>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+        <label className="block">
+          <span className="text-xs font-bold uppercase tracking-wide text-[var(--kora-muted)]">
+            Preferred city
+          </span>
+          <input
+            value={preferredCity}
+            onChange={(e) => setPreferredCity(e.target.value)}
+            className="kora-input mt-1.5"
+            placeholder="Kigali"
+          />
+        </label>
         <label className="block">
           <span className="text-xs font-bold uppercase tracking-wide text-[var(--kora-muted)]">
             {t('auth.password')}
@@ -76,6 +97,7 @@ export function SignupPage() {
             autoComplete="new-password"
           />
         </label>
+        </div>
 
         <fieldset className="kora-card-muted rounded-2xl p-4">
           <legend className="px-1 text-xs font-bold uppercase tracking-wide text-[var(--kora-muted)]">
@@ -105,6 +127,50 @@ export function SignupPage() {
             ))}
           </div>
         </fieldset>
+
+        {role === 'business' ? (
+          <fieldset className="kora-card-muted rounded-2xl p-3.5">
+            <legend className="px-1 text-xs font-bold uppercase tracking-wide text-[var(--kora-muted)]">
+              Business workspace setup
+            </legend>
+            <div className="mt-2 grid gap-3 sm:grid-cols-[1.5fr_1fr] sm:items-end">
+              <label className="block sm:col-span-2">
+                <span className="text-xs font-bold uppercase tracking-wide text-[var(--kora-muted)]">
+                  Business category
+                </span>
+                <select
+                  value={businessCategory}
+                  onChange={(e) => setBusinessCategory(e.target.value)}
+                  className="kora-input mt-1.5"
+                >
+                  {categories
+                    .filter((c) => c.id !== 'all')
+                    .map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.icon} {c.label}
+                      </option>
+                    ))}
+                </select>
+              </label>
+              <label className="block sm:col-span-2">
+                <span className="text-xs font-bold uppercase tracking-wide text-[var(--kora-muted)]">
+                  Team size (up to 100)
+                </span>
+                <input
+                  type="range"
+                  min={1}
+                  max={100}
+                  value={workerCount}
+                  onChange={(e) => setWorkerCount(Number(e.target.value))}
+                  className="mt-2 w-full accent-emerald-600"
+                />
+                <p className="mt-1 text-xs font-semibold text-[var(--kora-text-secondary)]">
+                  {workerCount} workers
+                </p>
+              </label>
+            </div>
+          </fieldset>
+        ) : null}
 
         <button
           type="submit"

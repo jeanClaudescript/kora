@@ -44,12 +44,18 @@ export function LoginPage() {
         name: 'Aline',
         email: 'aline@demo.kora',
         role: 'customer',
+        preferredCity: 'Kigali',
+        interestCategories: ['Salon', 'Spa', 'Barber'],
       },
       business: {
         id: 'b-demo',
         name: 'Amahoro Glow',
         email: 'owner@amahoro.demo',
         role: 'business',
+        businessCategory: 'Salon',
+        businessWorkerCount: 48,
+        preferredCity: 'Kigali',
+        interestCategories: ['Salon'],
       },
       admin: {
         id: 'a-demo',
@@ -125,17 +131,27 @@ export function LoginPage() {
         </button>
         <button
           type="button"
+          onClick={() => {
+            login({
+              id: 'c-client',
+              name: 'Client Demo',
+              email: 'client@demo.kora',
+              role: 'customer',
+              preferredCity: 'Kigali',
+              interestCategories: ['Massage', 'Restaurant', 'Courier'],
+            })
+            goAfterLogin('customer')
+          }}
+          className="rounded-xl border border-sky-500/40 bg-sky-500/10 py-2.5 text-xs font-bold text-sky-900 transition hover:bg-sky-500/15 dark:text-sky-200"
+        >
+          {t('auth.demoClient')}
+        </button>
+        <button
+          type="button"
           onClick={() => demo('business')}
           className="rounded-xl border border-emerald-600/40 bg-emerald-600/10 py-2.5 text-xs font-bold text-emerald-800 transition hover:bg-emerald-600/15 dark:text-emerald-200"
         >
           {t('auth.demoBusiness')}
-        </button>
-        <button
-          type="button"
-          onClick={() => demo('admin')}
-          className="rounded-xl border border-violet-500/40 bg-violet-500/10 py-2.5 text-xs font-bold text-violet-900 transition hover:bg-violet-500/15 dark:text-violet-200"
-        >
-          {t('auth.demoAdmin')}
         </button>
       </div>
 

@@ -38,7 +38,30 @@ export function AccountPage() {
         </div>
 
         <div className="kora-card rounded-2xl p-6 lg:col-span-2">
-          <h2 className="text-lg font-bold text-[var(--kora-text)]">{t('accountPage.shortcuts')}</h2>
+          <h2 className="text-lg font-bold text-[var(--kora-text)]">Your dynamic dashboard</h2>
+          <p className="mt-1 text-sm text-[var(--kora-text-secondary)]">
+            Personalized by location, behavior, and your preferred categories.
+          </p>
+          <div className="mt-4 grid gap-3 sm:grid-cols-3">
+            <div className="kora-card-muted rounded-xl p-3">
+              <p className="text-xs font-bold uppercase text-[var(--kora-muted)]">Location focus</p>
+              <p className="mt-1 text-base font-bold text-[var(--kora-text)]">
+                {user?.preferredCity ?? 'Kigali'}
+              </p>
+            </div>
+            <div className="kora-card-muted rounded-xl p-3">
+              <p className="text-xs font-bold uppercase text-[var(--kora-muted)]">Top interests</p>
+              <p className="mt-1 text-sm font-semibold text-[var(--kora-text)]">
+                {(user?.interestCategories ?? ['Salon', 'Spa', 'Courier']).slice(0, 2).join(', ')}
+              </p>
+            </div>
+            <div className="kora-card-muted rounded-xl p-3">
+              <p className="text-xs font-bold uppercase text-[var(--kora-muted)]">Best booking window</p>
+              <p className="mt-1 text-base font-bold text-[var(--kora-text)]">18:00 - 20:00</p>
+            </div>
+          </div>
+
+          <h2 className="mt-6 text-lg font-bold text-[var(--kora-text)]">{t('accountPage.shortcuts')}</h2>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <Link
               to="/account/messages"

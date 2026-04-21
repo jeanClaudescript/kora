@@ -46,6 +46,16 @@
 body {
   margin: 0;
   min-height: 100dvh;
+  color: var(--rb-text);
+  background: var(--rb-bg);
+}
+
+html.dark {
+  --rb-bg: #090f1a;
+  --rb-surface: #111827;
+  --rb-text: #f8fafc;
+  --rb-muted: #94a3b8;
+  --rb-border: #334155;
 }
 
 #root {

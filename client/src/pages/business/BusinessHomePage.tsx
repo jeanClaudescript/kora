@@ -1,8 +1,17 @@
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { useAuth } from '../../auth/AuthContext'
 
 export function BusinessHomePage() {
   const { t } = useTranslation()
+  const { user } = useAuth()
+  const workerCount = Math.min(user?.businessWorkerCount ?? 1, 100)
+  const credentialSeed = user?.id ?? 'biz'
+  const adminKey = `${credentialSeed}-ADMIN`
+  const workerKeys = Array.from({ length: workerCount }).map((_, idx) => ({
+    name: `Worker ${String(idx + 1).padStart(2, '0')}`,
+    key: `${credentialSeed}-W${String(idx + 1).padStart(3, '0')}`,
+  }))
 
   return (
     <div className="space-y-8">
@@ -17,6 +26,12 @@ export function BusinessHomePage() {
             </p>
           </div>
           <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
+            <Link
+              to="/business/workspaces"
+              className="inline-flex items-center justify-center rounded-2xl border border-[var(--kora-line)] bg-[var(--kora-elevated-muted)] px-5 py-3 text-sm font-bold text-[var(--kora-text)] hover:bg-[var(--kora-line)]/25"
+            >
+              {t('business.navWorkspaces')}
+            </Link>
             <Link
               to="/business/insights"
               className="inline-flex items-center justify-center rounded-2xl border border-[var(--kora-line)] bg-[var(--kora-elevated-muted)] px-5 py-3 text-sm font-bold text-[var(--kora-text)] hover:bg-[var(--kora-line)]/25"
@@ -85,6 +100,37 @@ export function BusinessHomePage() {
           </div>
         </div>
       </div>
+
+      {workerCount > 1 ? (
+        <div className="kora-card rounded-3xl border border-emerald-200/60 bg-gradient-to-br from-emerald-50 to-white p-5 dark:border-emerald-900/40 dark:from-emerald-950/30 dark:to-zinc-900">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-lg font-black text-emerald-900 dark:text-emerald-200">
+              Worker keys (admin only)
+            </h2>
+            <span className="rounded-full bg-emerald-600 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white">
+              Private
+            </span>
+          </div>
+          <p className="mt-1 text-sm text-emerald-800/85 dark:text-emerald-300/90">
+            Each worker has independent credentials and workspace. Do not share keys publicly.
+          </p>
+          <div className="mt-3 rounded-xl border border-emerald-300/60 bg-white/80 p-3 dark:border-emerald-900/50 dark:bg-zinc-900/70">
+            <p className="text-xs font-bold uppercase text-emerald-700 dark:text-emerald-300">Admin key</p>
+            <p className="mt-1 text-sm font-black text-emerald-900 dark:text-emerald-200">{adminKey}</p>
+          </div>
+          <div className="mt-3 max-h-56 space-y-2 overflow-y-auto pr-1">
+            {workerKeys.map((wk) => (
+              <div
+                key={wk.key}
+                className="flex items-center justify-between rounded-xl border border-emerald-200/70 bg-white/75 px-3 py-2 text-sm dark:border-emerald-900/40 dark:bg-zinc-900/70"
+              >
+                <span className="font-semibold text-emerald-900 dark:text-emerald-200">{wk.name}</span>
+                <span className="font-bold text-emerald-700 dark:text-emerald-300">{wk.key}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
 
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="kora-card rounded-3xl p-6">

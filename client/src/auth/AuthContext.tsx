@@ -14,6 +14,10 @@ export type AuthUser = {
   name: string
   email: string
   role: UserRole
+  businessCategory?: string
+  businessWorkerCount?: number
+  preferredCity?: string
+  interestCategories?: string[]
 }
 
 const STORAGE_KEY = 'kora.user'
