@@ -162,7 +162,28 @@ export function BusinessInsightsPage() {
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="kora-card rounded-3xl p-5 lg:col-span-2">
           <h2 className="text-lg font-bold text-[var(--kora-text)]">{t('business.insTopSvc')}</h2>
-          <div className="mt-4 overflow-hidden rounded-xl border border-[var(--kora-line)]">
+          <div className="mt-4 grid gap-3 md:hidden">
+            {TOP_SVC.map((r) => (
+              <div key={r.name} className="rounded-2xl border border-[var(--kora-line)] bg-[var(--kora-elevated)] p-4">
+                <p className="text-base font-black text-[var(--kora-text)]">{r.name}</p>
+                <div className="mt-2 grid grid-cols-2 gap-2">
+                  <div className="rounded-xl border border-[var(--kora-line)] bg-[var(--kora-elevated-muted)]/60 p-3">
+                    <p className="text-[10px] font-black uppercase tracking-wide text-[var(--kora-muted)]">
+                      {t('business.insColCount')}
+                    </p>
+                    <p className="mt-1 text-lg font-black text-[var(--kora-text)]">{r.n}</p>
+                  </div>
+                  <div className="rounded-xl border border-[var(--kora-line)] bg-[var(--kora-elevated-muted)]/60 p-3">
+                    <p className="text-[10px] font-black uppercase tracking-wide text-[var(--kora-muted)]">
+                      {t('business.insColRev')}
+                    </p>
+                    <p className="mt-1 text-lg font-black text-[var(--kora-text)]">{r.rev}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-4 hidden overflow-hidden rounded-xl border border-[var(--kora-line)] md:block">
             <table className="w-full text-left text-sm">
               <thead className="bg-[var(--kora-elevated-muted)] text-xs font-bold uppercase text-[var(--kora-muted)]">
                 <tr>

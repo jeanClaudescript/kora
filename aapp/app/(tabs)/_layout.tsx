@@ -16,7 +16,7 @@ export default function TabLayout() {
         headerTransparent: true,
         headerShadowVisible: false,
         sceneStyle: {
-          paddingTop: 116,
+          paddingTop: 128,
           backgroundColor: 'transparent',
         },
         tabBarActiveTintColor: AppTheme.colors.brand,

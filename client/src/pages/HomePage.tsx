@@ -5,6 +5,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { categories, listings } from '../data/catalog'
 import { ListingCard } from '../components/marketplace/ListingCard'
 import { IconSearch } from '../components/icons'
+import { LocationPickerModal } from '../components/location/LocationPickerModal'
 import { useAuth } from '../auth/AuthContext'
 import { getCustomerDashboard, getListings } from '../lib/api'
 
@@ -67,6 +68,17 @@ export function HomePage() {
   const [liveListings, setLiveListings] = useState(listings)
   const [customerDash, setCustomerDash] = useState<CustomerDash | null>(null)
   const [geo, setGeo] = useState<{ lat: number; lng: number } | null>(null)
+  const [locationOpen, setLocationOpen] = useState(false)
+  const [savedLoc, setSavedLoc] = useState<{ lat: number; lng: number; label: string } | null>(null)
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('rb_location_v1')
+      if (raw) setSavedLoc(JSON.parse(raw))
+    } catch {
+      // ignore
+    }
+  }, [])
 
   useEffect(() => {
     getListings()
@@ -78,6 +90,7 @@ export function HomePage() {
 
   useEffect(() => {
     if (!('geolocation' in navigator)) return undefined
+    if (savedLoc) return undefined
     const tid = window.setTimeout(() => {
       navigator.geolocation.getCurrentPosition(
         (pos) => setGeo({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
@@ -96,8 +109,8 @@ export function HomePage() {
       try {
         const data = (await getCustomerDashboard(uid, {
           city: cityParam,
-          lat: geo?.lat,
-          lng: geo?.lng,
+          lat: savedLoc?.lat ?? geo?.lat,
+          lng: savedLoc?.lng ?? geo?.lng,
           interests: user?.interestCategories,
           visitStyle: 'balanced',
         })) as CustomerDash
@@ -109,7 +122,7 @@ export function HomePage() {
     return () => {
       cancelled = true
     }
-  }, [user?.id, user?.preferredCity, user?.interestCategories, city, geo])
+  }, [user?.id, user?.preferredCity, user?.interestCategories, city, geo, savedLoc])
 
   const personalizedCategories = useMemo(() => {
     const source = categories.slice(1)
@@ -143,6 +156,21 @@ export function HomePage() {
 
   return (
     <div className="bg-[var(--kora-canvas)]">
+      <LocationPickerModal
+        open={locationOpen}
+        title="Choose your area"
+        initialValue={savedLoc}
+        onClose={() => setLocationOpen(false)}
+        onPick={(loc) => {
+          setSavedLoc(loc)
+          try {
+            localStorage.setItem('rb_location_v1', JSON.stringify(loc))
+          } catch {
+            // ignore
+          }
+          setLocationOpen(false)
+        }}
+      />
       {/* Above the fold: picks first, minimal copy */}
       <section className="border-b border-[var(--kora-line)] bg-gradient-to-b from-[var(--kora-elevated)] via-[var(--kora-canvas)] to-[var(--kora-canvas)] px-4 pb-6 pt-5 sm:pt-6">
         <div className="mx-auto max-w-7xl">
@@ -224,16 +252,13 @@ export function HomePage() {
                 </h2>
                 <p className="mt-1 max-w-2xl text-sm text-ink-600 dark:text-slate-400">{t('home.dashSubtitle')}</p>
               </div>
-              {customerDash.locationPulse?.mapExploreUrl ? (
-                <a
-                  href={customerDash.locationPulse.mapExploreUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex shrink-0 items-center justify-center rounded-2xl bg-gradient-to-r from-fuchsia-600 to-violet-600 px-4 py-2.5 text-xs font-bold text-white shadow-lg transition hover:brightness-105"
-                >
-                  {customerDash.locationPulse.exploreLabel ?? t('home.dashExploreMap')}
-                </a>
-              ) : null}
+              <button
+                type="button"
+                onClick={() => setLocationOpen(true)}
+                className="inline-flex shrink-0 items-center justify-center rounded-2xl bg-gradient-to-r from-fuchsia-600 to-violet-600 px-4 py-2.5 text-xs font-bold text-white shadow-lg transition hover:brightness-105"
+              >
+                {savedLoc ? 'Change location' : 'Set location'}
+              </button>
             </div>
 
             <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -295,16 +320,13 @@ export function HomePage() {
                         {v.area}, {v.city} · {v.slotLabel}
                       </p>
                     </div>
-                    {v.mapUrl ? (
-                      <a
-                        href={v.mapUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex shrink-0 items-center justify-center rounded-xl border border-fuchsia-200 bg-fuchsia-50 px-3 py-2 text-xs font-bold text-fuchsia-900 hover:bg-fuchsia-100 dark:border-fuchsia-900/50 dark:bg-fuchsia-950/40 dark:text-fuchsia-100"
-                      >
-                        {t('home.dashOpenMap')}
-                      </a>
-                    ) : null}
+                    <button
+                      type="button"
+                      onClick={() => setLocationOpen(true)}
+                      className="inline-flex shrink-0 items-center justify-center rounded-xl border border-fuchsia-200 bg-fuchsia-50 px-3 py-2 text-xs font-bold text-fuchsia-900 hover:bg-fuchsia-100 dark:border-fuchsia-900/50 dark:bg-fuchsia-950/40 dark:text-fuchsia-100"
+                    >
+                      Map
+                    </button>
                   </li>
                 ))}
               </ul>
@@ -390,7 +412,7 @@ export function HomePage() {
             onSubmit={onHeroSubmit}
             className="kora-card mt-5 rounded-2xl p-3 sm:p-4"
           >
-            <div className="grid gap-3 sm:grid-cols-[1.4fr_1fr_auto] sm:items-end">
+            <div className="grid gap-3 sm:grid-cols-[1.15fr_0.95fr_0.95fr_auto] sm:items-end">
               <label className="block">
                 <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-[var(--kora-muted)]">
                   {t('home.serviceLabel')}
@@ -414,6 +436,23 @@ export function HomePage() {
                   className="kora-input py-2.5"
                   placeholder="Kigali"
                 />
+              </label>
+              <label className="block">
+                <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-[var(--kora-muted)]">
+                  Category
+                </span>
+                <select
+                  value={pickedCategory}
+                  onChange={(e) => setPickedCategory(e.target.value)}
+                  className="kora-input py-2.5"
+                >
+                  <option value="all">All services</option>
+                  {personalizedCategories.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {categoryLabel(c.id, t)}
+                    </option>
+                  ))}
+                </select>
               </label>
               <button
                 type="submit"
@@ -543,3 +582,4 @@ export function HomePage() {
     </div>
   )
 }
+

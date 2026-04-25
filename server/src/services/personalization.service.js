@@ -199,6 +199,18 @@ function buildCustomerDashboard(listings, profile, options = {}) {
       profile.lat && profile.lng ? 'Location on — nearer picks float up' : 'Optional: share location later for tighter matches',
       `Pace · ${profile.visitStyle || 'balanced'}`,
     ],
+    uiParity: {
+      tokens: {
+        spacing: { screen: 16, card: 12, chipGap: 8 },
+        typography: { h1: 30, h2: 24, body: 14, caption: 12 },
+      },
+      toggles: {
+        compactChips: false,
+        elevatedHeader: true,
+        showImagePreviewStrip: true,
+        boldSectionTitles: true,
+      },
+    },
   };
 }
 
@@ -331,6 +343,18 @@ function buildBusinessDashboard(listings, query = {}, options = {}) {
       options.bookings || [],
       Number(options.workerCount || 8),
     ),
+    uiParity: {
+      tokens: {
+        spacing: { screen: 16, card: 12, chipGap: 8 },
+        typography: { h1: 30, h2: 24, body: 14, caption: 12 },
+      },
+      toggles: {
+        compactChips: false,
+        elevatedHeader: true,
+        showImagePreviewStrip: true,
+        workerQuickTogglePanel: true,
+      },
+    },
   };
 }
 

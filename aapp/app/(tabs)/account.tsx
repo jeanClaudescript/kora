@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
-import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import * as Linking from 'expo-linking';
 
 import { KoraCard, PrimaryButton, SecondaryButton } from '@/components/ui/primitives';
@@ -11,11 +11,20 @@ import { registerForPushNotificationsAsync, scheduleDemoNotification } from '@/l
 export default function AccountScreen() {
   const router = useRouter();
   const [token, setToken] = useState<string | null>(null);
-  const [badge, setBadge] = useState('Trusted Booking Partner');
+  const [uiToggles, setUiToggles] = useState({
+    compactChips: false,
+    elevatedHeader: true,
+    showImagePreviewStrip: true,
+    workerQuickTogglePanel: true,
+  });
 
   useEffect(() => {
     getBusinessDashboard()
-      .then((data) => setBadge(data?.reputation?.badge ?? 'Trusted Booking Partner'))
+      .then((data) => {
+        if (data?.uiParity?.toggles) {
+          setUiToggles((prev) => ({ ...prev, ...data.uiParity.toggles }));
+        }
+      })
       .catch(() => undefined);
   }, []);
 
@@ -41,14 +50,13 @@ export default function AccountScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.title}>Account</Text>
-      <Text style={styles.subtitle}>Profile settings and notification controls.</Text>
-      <Text style={styles.badge}>{badge}</Text>
+      <Text style={styles.subtitle}>Personalized by location, behavior, and your preferred categories.</Text>
 
       <KoraCard>
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>Push notifications</Text>
+        <Text style={styles.cardTitle}>Your dynamic dashboard</Text>
         <Text style={styles.cardBody}>
-          Match the client experience by reminding users about upcoming bookings.
+          Location focus: Kigali · Top interests: Salon, Spa · Best booking window: 18:00 - 20:00
         </Text>
         <PrimaryButton label="Enable push notifications" onPress={enableNotifications} />
         <View style={{ marginTop: 10 }}>
@@ -63,16 +71,51 @@ export default function AccountScreen() {
         <Text style={styles.quickTitle}>Shortcuts</Text>
         <SecondaryButton label="Messages" onPress={() => router.push('/account/messages')} />
         <SecondaryButton label="My bookings" onPress={() => router.push('/account/trips')} />
-        <SecondaryButton label="Sign in / switch account" onPress={() => router.push('/auth/login')} />
+        <SecondaryButton label="Search listings" onPress={() => router.push('/(tabs)/search')} />
+        <SecondaryButton label="List your business" onPress={() => router.push('/auth/signup')} />
       </View>
       </KoraCard>
 
       <KoraCard>
         <View style={styles.quickCard}>
-          <Text style={styles.quickTitle}>Growth and retention</Text>
+          <Text style={styles.quickTitle}>UI parity toggles (backend synced)</Text>
+          <View style={styles.toggleRow}>
+            <Text style={styles.toggleText}>Compact chips</Text>
+            <Switch
+              value={uiToggles.compactChips}
+              onValueChange={(v) => setUiToggles((prev) => ({ ...prev, compactChips: v }))}
+            />
+          </View>
+          <View style={styles.toggleRow}>
+            <Text style={styles.toggleText}>Elevated header</Text>
+            <Switch
+              value={uiToggles.elevatedHeader}
+              onValueChange={(v) => setUiToggles((prev) => ({ ...prev, elevatedHeader: v }))}
+            />
+          </View>
+          <View style={styles.toggleRow}>
+            <Text style={styles.toggleText}>Preview image strip</Text>
+            <Switch
+              value={uiToggles.showImagePreviewStrip}
+              onValueChange={(v) => setUiToggles((prev) => ({ ...prev, showImagePreviewStrip: v }))}
+            />
+          </View>
+          <View style={styles.toggleRow}>
+            <Text style={styles.toggleText}>Worker quick panel</Text>
+            <Switch
+              value={uiToggles.workerQuickTogglePanel}
+              onValueChange={(v) => setUiToggles((prev) => ({ ...prev, workerQuickTogglePanel: v }))}
+            />
+          </View>
+          <Text style={styles.toggleHint}>These toggles start from backend parity config and can be finalized per device.</Text>
+        </View>
+      </KoraCard>
+
+      <KoraCard>
+        <View style={styles.quickCard}>
+          <Text style={styles.quickTitle}>Business live operations</Text>
           <Text style={styles.cardBody}>
-            Enable always-on campaigns for businesses with reminders, re-booking nudges,
-            and referral offers.
+            Real-time feed, automations, and fast staff controls built for 24/7 businesses.
           </Text>
           <PrimaryButton
             label="Download App"
@@ -89,11 +132,23 @@ const styles = StyleSheet.create({
   content: { padding: 16, paddingBottom: 100 },
   title: { color: AppTheme.colors.text, fontWeight: '800', fontSize: 24 },
   subtitle: { color: AppTheme.colors.textSecondary, marginTop: 4, marginBottom: 14 },
-  badge: { marginBottom: 12, color: AppTheme.colors.brandDark, fontWeight: '800' },
   card: {},
   cardTitle: { color: AppTheme.colors.text, fontSize: 18, fontWeight: '800' },
   cardBody: { color: AppTheme.colors.textSecondary, marginTop: 6, marginBottom: 14 },
   token: { marginTop: 12, color: AppTheme.colors.muted, fontSize: 11 },
   quickCard: { marginTop: 12, gap: 8 },
   quickTitle: { color: AppTheme.colors.text, fontWeight: '800', marginBottom: 4 },
+  toggleRow: {
+    borderWidth: 1,
+    borderColor: AppTheme.colors.line,
+    borderRadius: 12,
+    backgroundColor: AppTheme.colors.elevatedMuted,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  toggleText: { color: AppTheme.colors.text, fontSize: 13, fontWeight: '700' },
+  toggleHint: { marginTop: 4, color: AppTheme.colors.textSecondary, fontSize: 12, lineHeight: 17 },
 });

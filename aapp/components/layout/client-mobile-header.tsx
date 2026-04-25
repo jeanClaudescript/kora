@@ -1,65 +1,42 @@
-import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Feather, Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { AppTheme } from '@/constants/app-theme';
+import { useThemeMode } from '@/providers/theme-mode-provider';
 
 export function ClientMobileHeader() {
   const router = useRouter();
-  const [query, setQuery] = useState('');
+  const { mode, setMode, theme } = useThemeMode();
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuAccountOpen, setMenuAccountOpen] = useState(false);
   const [menuNotifOpen, setMenuNotifOpen] = useState(false);
-  const [languageOpen, setLanguageOpen] = useState(false);
-  const [language, setLanguage] = useState<'EN' | 'FR' | 'RW'>('EN');
-  const [darkHeader, setDarkHeader] = useState(true);
-
-  const palette = useMemo(
-    () =>
-      darkHeader
-        ? {
-            shell: 'rgba(3, 7, 18, 0.12)',
-            shellSoft: 'rgba(2, 6, 23, 0.16)',
-            card: 'rgba(15, 23, 42, 0.28)',
-            border: 'rgba(148, 163, 184, 0.20)',
-            text: '#e5e7eb',
-            textSoft: '#9ca3af',
-            icon: '#d1d5db',
-            k: '#2563eb',
-          }
-        : {
-            shell: 'rgba(243, 244, 246, 0.20)',
-            shellSoft: 'rgba(248, 250, 252, 0.25)',
-            card: 'rgba(255, 255, 255, 0.42)',
-            border: 'rgba(148, 163, 184, 0.20)',
-            text: '#111827',
-            textSoft: '#6b7280',
-            icon: '#4b5563',
-            k: '#2f65d9',
-          },
-    [darkHeader],
-  );
-
-  function submitSearch() {
-    router.push({ pathname: '/(tabs)/search', params: query ? { q: query } : {} });
-    setMenuOpen(false);
-    setLanguageOpen(false);
-  }
+  const [query, setQuery] = useState('');
 
   function navigate(to: string) {
     router.push(to as never);
     setMenuOpen(false);
     setMenuAccountOpen(false);
     setMenuNotifOpen(false);
-    setLanguageOpen(false);
+  }
+
+  function toggleThemeQuick() {
+    setMode((prev) => {
+      if (prev === 'system') return 'dark';
+      if (prev === 'dark') return 'light';
+      return 'system';
+    });
+  }
+
+  function submitSearch() {
+    navigate('/(tabs)/search');
   }
 
   const hasOverlay = menuOpen || menuAccountOpen || menuNotifOpen;
 
   return (
-    <SafeAreaView edges={['top']} style={[styles.safe, { backgroundColor: palette.shell }]}>
+    <SafeAreaView edges={['top']} style={[styles.safe, { backgroundColor: theme.colors.headerSurface }]}>
       {hasOverlay ? (
         <Pressable
           style={styles.dismiss}
@@ -67,121 +44,177 @@ export function ClientMobileHeader() {
             setMenuOpen(false);
             setMenuAccountOpen(false);
             setMenuNotifOpen(false);
-            setLanguageOpen(false);
           }}
         />
       ) : null}
-      <View style={[styles.wrap, { backgroundColor: palette.shellSoft, borderBottomColor: palette.border }]}>
+      <View
+        style={[
+          styles.wrap,
+          {
+            backgroundColor: theme.colors.headerSurface,
+            borderBottomColor: theme.colors.navBorder,
+          },
+        ]}>
+        <View style={styles.titleTopRow}>
+          <Text style={[styles.appNameTop, { color: theme.colors.textSecondary }]}>Kora App</Text>
+        </View>
         <View style={styles.rowTop}>
           <TouchableOpacity
-            style={[styles.squareBtn, { borderColor: palette.border, backgroundColor: palette.card }]}
+            style={[
+              styles.iconBtn,
+              { borderColor: theme.colors.navBorder, backgroundColor: theme.colors.elevatedMuted },
+            ]}
             onPress={() => {
               setMenuOpen((v) => !v);
               setMenuAccountOpen(false);
               setMenuNotifOpen(false);
             }}>
-            <Feather name="menu" size={20} color={palette.icon} />
+            <Feather name={menuOpen ? 'x' : 'menu'} size={20} color={theme.colors.text} />
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.kLogo, { backgroundColor: palette.k }]} onPress={() => router.push('/(tabs)')}>
-            <Text style={styles.kLogoText}>K</Text>
+          <TouchableOpacity style={styles.brandBlock} onPress={() => router.push('/(tabs)')}>
+            <View style={[styles.logo, { backgroundColor: theme.colors.brandDark }]}>
+              <Text style={styles.logoText}>K</Text>
+            </View>
           </TouchableOpacity>
           <View style={styles.rightIcons}>
             <TouchableOpacity
-              style={[styles.circleBtn, { borderColor: palette.border, backgroundColor: palette.card }]}
-              onPress={() => setDarkHeader((v) => !v)}>
-              <Feather name={darkHeader ? 'sun' : 'moon'} size={18} color={darkHeader ? '#f59e0b' : '#d39a2f'} />
+              style={[
+                styles.iconBtn,
+                { borderColor: theme.colors.navBorder, backgroundColor: theme.colors.elevatedMuted },
+              ]}
+              onPress={toggleThemeQuick}
+              accessibilityLabel="Toggle theme"
+            >
+              <Ionicons name="moon-outline" size={18} color={theme.colors.text} />
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.circleBtn, { borderColor: palette.border, backgroundColor: palette.card }]}
-              onPress={() => router.push('/(tabs)/search')}>
-              <Ionicons name="search" size={18} color={palette.icon} />
+              style={[
+                styles.iconBtn,
+                { borderColor: theme.colors.navBorder, backgroundColor: theme.colors.elevatedMuted },
+              ]}
+              onPress={submitSearch}
+              accessibilityLabel="Search"
+            >
+              <Ionicons name="search" size={18} color={theme.colors.text} />
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.circleBtn, { borderColor: palette.border, backgroundColor: palette.card }]}
+              style={[
+                styles.iconBtn,
+                { borderColor: theme.colors.navBorder, backgroundColor: theme.colors.elevatedMuted },
+              ]}
               onPress={() => {
                 setMenuNotifOpen((v) => !v);
                 setMenuAccountOpen(false);
                 setMenuOpen(false);
-              }}>
-              <Ionicons name="notifications-outline" size={18} color={palette.icon} />
+              }}
+              accessibilityLabel="Notifications"
+            >
+              <Ionicons name="notifications-outline" size={18} color={theme.colors.text} />
               <View style={styles.badge}>
                 <Text style={styles.badgeText}>2</Text>
               </View>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.circleBtn, styles.avatarBtn, { borderColor: '#2563EB', backgroundColor: '#1d4ed8' }]}
+              style={[
+                styles.avatarBtn,
+                { borderColor: theme.colors.brand, backgroundColor: theme.colors.brandDark },
+              ]}
               onPress={() => {
                 setMenuAccountOpen((v) => !v);
                 setMenuNotifOpen(false);
                 setMenuOpen(false);
-              }}>
+              }}
+              accessibilityLabel="Account"
+            >
               <Text style={styles.avatarText}>A</Text>
             </TouchableOpacity>
           </View>
         </View>
 
-        <View style={[styles.searchShell, { borderColor: palette.border, backgroundColor: palette.card }]}>
-          <MaterialCommunityIcons name="magnify" size={22} color="#4f78c2" />
-          <TextInput
-            style={styles.searchInput}
-            value={query}
-            onChangeText={setQuery}
-            onSubmitEditing={submitSearch}
-            placeholder="What do you need?"
-            placeholderTextColor={AppTheme.colors.placeholder}
-          />
+        <View style={styles.searchRow}>
+          <View
+            style={[
+              styles.searchShell,
+              {
+                borderColor: theme.colors.navBorder,
+                backgroundColor: theme.colors.elevated,
+              },
+            ]}
+          >
+            <Ionicons name="search" size={18} color={theme.colors.brand} />
+            <TextInput
+              value={query}
+              onChangeText={setQuery}
+              placeholder="Ukeneye iki?"
+              placeholderTextColor={theme.colors.placeholder}
+              style={[styles.searchInput, { color: theme.colors.text }]}
+              returnKeyType="search"
+              onSubmitEditing={submitSearch}
+            />
+          </View>
         </View>
 
         {menuOpen ? (
-          <View style={[styles.dropdownCard, { backgroundColor: 'rgba(2, 6, 23, 0.38)', borderColor: 'rgba(96, 165, 250, 0.35)' }]}>
+          <View style={[styles.dropdownCard, { backgroundColor: theme.colors.elevated, borderColor: theme.colors.navBorder }]}>
+            <TouchableOpacity style={styles.menuItem} onPress={() => navigate('/(tabs)')}>
+              <Text style={[styles.menuText, { color: theme.colors.text }]}>Home</Text>
+            </TouchableOpacity>
             <TouchableOpacity style={styles.menuItem} onPress={() => navigate('/(tabs)/search')}>
-              <Text style={[styles.menuText, { color: '#f3f4f6' }]}>Explore</Text>
+              <Text style={[styles.menuText, { color: theme.colors.text }]}>Search</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.menuItem} onPress={() => router.push({ pathname: '/(tabs)/search', params: { category: 'Salon' } })}>
-              <Text style={[styles.menuText, { color: '#f3f4f6' }]}>Salon</Text>
+            <TouchableOpacity style={styles.menuItem} onPress={() => navigate('/(tabs)/bookings')}>
+              <Text style={[styles.menuText, { color: theme.colors.text }]}>Bookings</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.menuItem} onPress={() => router.push({ pathname: '/(tabs)/search', params: { category: 'Barber' } })}>
-              <Text style={[styles.menuText, { color: '#f3f4f6' }]}>Barber</Text>
+            <TouchableOpacity style={styles.menuItem} onPress={() => navigate('/(tabs)/account')}>
+              <Text style={[styles.menuText, { color: theme.colors.text }]}>Account</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.menuItem} onPress={() => navigate('/auth/signup')}>
-              <Text style={[styles.menuText, { color: '#f3f4f6' }]}>For business</Text>
-            </TouchableOpacity>
-            <Text style={styles.menuLabel}>LANGUAGE</Text>
-            <TouchableOpacity style={styles.languageHead} onPress={() => setLanguageOpen((v) => !v)}>
-              <Text style={styles.menuLanguage}>{language}</Text>
-              <Feather name={languageOpen ? 'chevron-up' : 'chevron-down'} size={16} color="#d1d5db" />
-            </TouchableOpacity>
-            {languageOpen ? (
-              <View style={styles.languageOptions}>
-                {(['EN', 'FR', 'RW'] as const).map((code) => (
+            <Text style={[styles.menuLabel, { color: theme.colors.brand }]}>THEME</Text>
+            <View style={styles.themeRow}>
+              {(['system', 'light', 'dark'] as const).map((k) => {
+                const active = mode === k;
+                return (
                   <TouchableOpacity
-                    key={code}
-                    style={[styles.languageOption, language === code && styles.languageOptionActive]}
-                    onPress={() => {
-                      setLanguage(code);
-                      setLanguageOpen(false);
-                    }}>
-                    <Text style={[styles.languageOptionText, language === code && styles.languageOptionTextActive]}>
-                      {code}
+                    key={k}
+                    onPress={() => setMode(k)}
+                    style={[
+                      styles.themePill,
+                      {
+                        borderColor: active ? theme.colors.brand : theme.colors.navBorder,
+                        backgroundColor: active ? theme.colors.brandSoft : theme.colors.elevatedMuted,
+                      },
+                    ]}>
+                    <Text
+                      style={[
+                        styles.themePillText,
+                        { color: active ? theme.colors.brand : theme.colors.textSecondary },
+                      ]}>
+                      {k.toUpperCase()}
                     </Text>
                   </TouchableOpacity>
-                ))}
-              </View>
-            ) : null}
+                );
+              })}
+            </View>
+            <Text style={[styles.menuLabel, { color: theme.colors.brand }]}>BUSINESS</Text>
+            <TouchableOpacity style={styles.menuItem} onPress={() => navigate('/account/business')}>
+              <Text style={[styles.menuText, { color: theme.colors.text }]}>Business</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.menuItem} onPress={() => navigate('/auth/signup')}>
+              <Text style={[styles.menuText, { color: theme.colors.text }]}>For business signup</Text>
+            </TouchableOpacity>
           </View>
         ) : null}
 
         {menuAccountOpen ? (
-          <View style={[styles.accountCard, { backgroundColor: '#0b1736', borderColor: '#2f4b8a' }]}>
-            <Text style={styles.accountEmail}>aline@demo.kora</Text>
+          <View style={[styles.accountCard, { backgroundColor: theme.colors.elevated, borderColor: theme.colors.navBorder }]}>
+            <Text style={[styles.accountEmail, { color: theme.colors.brand }]}>aline@demo.kora</Text>
             <TouchableOpacity style={styles.accountRow} onPress={() => navigate('/account/messages')}>
-              <Text style={styles.accountText}>Messages</Text>
+              <Text style={[styles.accountText, { color: theme.colors.text }]}>Messages</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.accountRow} onPress={() => navigate('/account/trips')}>
-              <Text style={styles.accountText}>My bookings</Text>
+              <Text style={[styles.accountText, { color: theme.colors.text }]}>My bookings</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.accountRow} onPress={() => navigate('/(tabs)/account')}>
-              <Text style={styles.accountText}>Account settings</Text>
+              <Text style={[styles.accountText, { color: theme.colors.text }]}>Account settings</Text>
             </TouchableOpacity>
             <TouchableOpacity style={[styles.accountRow, styles.signOutRow]} onPress={() => navigate('/auth/login')}>
               <Text style={styles.signOutText}>Sign out</Text>
@@ -190,10 +223,14 @@ export function ClientMobileHeader() {
         ) : null}
 
         {menuNotifOpen ? (
-          <View style={[styles.notifCard, { backgroundColor: '#0b1736', borderColor: '#2f4b8a' }]}>
-            <Text style={styles.notifTitle}>Notifications</Text>
-            <Text style={styles.notifItem}>Booking confirmed: Amahoro Glow Salon · 10:30</Text>
-            <Text style={styles.notifItem}>Reminder: appointment starts in 30 minutes</Text>
+          <View style={[styles.notifCard, { backgroundColor: theme.colors.elevated, borderColor: theme.colors.navBorder }]}>
+            <Text style={[styles.notifTitle, { color: theme.colors.text }]}>Activity</Text>
+            <Text style={[styles.notifItem, { color: theme.colors.textSecondary }]}>
+              Booking confirmed: Amahoro Glow Salon · 10:30
+            </Text>
+            <Text style={[styles.notifItem, { color: theme.colors.textSecondary }]}>
+              Reminder: appointment starts in 30 minutes
+            </Text>
           </View>
         ) : null}
       </View>
@@ -203,7 +240,6 @@ export function ClientMobileHeader() {
 
 const styles = StyleSheet.create({
   safe: {
-    backgroundColor: 'transparent',
     zIndex: 80,
   },
   dismiss: {
@@ -218,7 +254,19 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     paddingHorizontal: 12,
     paddingBottom: 10,
-    gap: 10,
+  },
+  titleTopRow: {
+    paddingTop: 4,
+    paddingBottom: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  appNameTop: { fontSize: 12, fontWeight: '900', letterSpacing: 0.4 },
+  brandBlock: {
+    width: 52,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   rowTop: {
     height: 48,
@@ -226,52 +274,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  squareBtn: {
+  iconBtn: {
     width: 48,
     height: 44,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: AppTheme.colors.line,
-    backgroundColor: AppTheme.colors.elevated,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#2563eb',
-    shadowOpacity: 0.12,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 2,
-  },
-  kLogo: {
-    marginLeft: 8,
-    width: 42,
-    height: 42,
-    borderRadius: 12,
-    backgroundColor: '#2f65d9',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#1d4ed8',
-    shadowOpacity: 0.35,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 4,
-  },
-  kLogoText: { color: '#fff', fontWeight: '900', fontSize: 18 },
-  rightIcons: { marginLeft: 'auto', flexDirection: 'row', gap: 8 },
-  circleBtn: {
-    width: 42,
-    height: 42,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: AppTheme.colors.lineStrong,
-    backgroundColor: AppTheme.colors.elevated,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#2563eb',
-    shadowOpacity: 0.12,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 2,
+    padding: 4,
   },
+  logo: {
+    width: 34,
+    height: 34,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoText: { color: '#fff', fontWeight: '900', fontSize: 16 },
+  rightIcons: { marginLeft: 'auto', flexDirection: 'row', gap: 10 },
   badge: {
     position: 'absolute',
     top: -1,
@@ -285,32 +305,30 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   badgeText: { color: '#fff', fontSize: 10, fontWeight: '800' },
+  avatarBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 999,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 4,
+  },
+  avatarText: { color: '#dbeafe', fontWeight: '900', fontSize: 16 },
+  searchRow: { paddingTop: 8 },
   searchShell: {
-    height: 46,
-    borderRadius: 14,
+    height: 42,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: AppTheme.colors.lineStrong,
-    backgroundColor: AppTheme.colors.elevated,
     paddingHorizontal: 12,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    shadowColor: '#0f172a',
-    shadowOpacity: 0.12,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 2,
   },
-  searchInput: {
-    flex: 1,
-    color: '#f3f4f6',
-    fontSize: 16,
-  },
-  avatarBtn: { borderWidth: 2 },
-  avatarText: { color: '#dbeafe', fontWeight: '900', fontSize: 16 },
+  searchInput: { flex: 1, fontSize: 14, fontWeight: '600' },
   dropdownCard: {
     borderWidth: 1,
-    borderRadius: 14,
+    borderRadius: 18,
     padding: 10,
     gap: 3,
     shadowColor: '#1d4ed8',
@@ -320,41 +338,35 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   menuItem: { paddingVertical: 8, paddingHorizontal: 4 },
-  menuText: { fontSize: 32 / 2, fontWeight: '700' },
-  menuLabel: { marginTop: 6, color: '#9ca3af', fontSize: 12, fontWeight: '800' },
-  menuLanguage: { color: '#f3f4f6', fontSize: 30 / 2, fontWeight: '800', paddingVertical: 6 },
-  languageHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 4 },
-  languageOptions: { flexDirection: 'row', gap: 8, paddingBottom: 6 },
-  languageOption: {
+  menuText: { fontSize: 16, fontWeight: '700' },
+  menuLabel: { marginTop: 6, fontSize: 12, fontWeight: '800' },
+  themeRow: { flexDirection: 'row', gap: 8, paddingTop: 6, paddingBottom: 4 },
+  themePill: {
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: '#334155',
-    backgroundColor: 'rgba(30,41,59,0.55)',
     paddingHorizontal: 10,
     paddingVertical: 6,
   },
-  languageOptionActive: { borderColor: '#60a5fa', backgroundColor: 'rgba(37,99,235,0.45)' },
-  languageOptionText: { color: '#cbd5e1', fontWeight: '700', fontSize: 12 },
-  languageOptionTextActive: { color: '#fff' },
+  themePillText: { fontWeight: '900', fontSize: 11, letterSpacing: 0.6 },
   accountCard: {
     position: 'absolute',
     right: 10,
-    top: 98,
+    top: 58,
     width: 230,
     borderWidth: 1,
     borderRadius: 18,
     overflow: 'hidden',
     zIndex: 50,
   },
-  accountEmail: { color: '#9fb2e5', fontSize: 13, paddingHorizontal: 14, paddingTop: 10, paddingBottom: 6 },
+  accountEmail: { fontSize: 13, paddingHorizontal: 14, paddingTop: 10, paddingBottom: 6, fontWeight: '800' },
   accountRow: { paddingHorizontal: 14, paddingVertical: 10 },
-  accountText: { color: '#e5e7eb', fontSize: 20 / 2, fontWeight: '700' },
-  signOutRow: { borderTopWidth: 1, borderTopColor: '#1f3e78' },
+  accountText: { fontSize: 14, fontWeight: '700' },
+  signOutRow: { borderTopWidth: 1, borderTopColor: 'rgba(148,163,184,0.25)' },
   signOutText: { color: '#fb7185', fontSize: 20 / 2, fontWeight: '800' },
   notifCard: {
     position: 'absolute',
     right: 62,
-    top: 98,
+    top: 58,
     width: 260,
     borderWidth: 1,
     borderRadius: 16,
@@ -362,6 +374,6 @@ const styles = StyleSheet.create({
     zIndex: 50,
     gap: 8,
   },
-  notifTitle: { color: '#e5e7eb', fontSize: 13, fontWeight: '800' },
-  notifItem: { color: '#cbd5e1', fontSize: 12, lineHeight: 17 },
+  notifTitle: { fontSize: 13, fontWeight: '800' },
+  notifItem: { fontSize: 12, lineHeight: 17 },
 });

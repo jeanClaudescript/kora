@@ -5,6 +5,7 @@ import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-nati
 import { KoraCard, KoraInput, PrimaryButton, SecondaryButton } from '@/components/ui/primitives';
 import { AppTheme } from '@/constants/app-theme';
 import { getListing } from '@/data/catalog';
+import { createBookingApi } from '@/lib/api';
 
 const SLOTS = [
   { id: '1', label: '09:00' },
@@ -36,6 +37,8 @@ export default function BookingScreen() {
   const [slotId, setSlotId] = useState<string | null>(null);
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
 
   if (!listing) {
     return (
@@ -53,20 +56,39 @@ export default function BookingScreen() {
   const canStep2 = !!slot && !slot.disabled;
   const canStep3 = name.trim().length >= 2 && phone.trim().length >= 8;
 
-  function confirmBooking() {
+  async function confirmBooking() {
     if (!selectedService || !slot) return;
-    router.push({
-      pathname: '/booking/success',
-      params: {
-        listingName: listing.name,
+    setSubmitting(true);
+    setSubmitError('');
+    try {
+      const saved = await createBookingApi({
         listingSlug: listing.slug,
         serviceName: selectedService.name,
         slotLabel: slot.label,
-        customerName: name.trim(),
+        guestName: name.trim(),
         phone: phone.trim(),
-        whatsapp: listing.whatsapp,
-      },
-    });
+        userId: 'guest',
+        channel: 'mobile',
+      });
+      router.push({
+        pathname: '/booking/success',
+        params: {
+          bookingId: String(saved._id ?? ''),
+          status: saved.status,
+          listingName: listing.name,
+          listingSlug: listing.slug,
+          serviceName: selectedService.name,
+          slotLabel: slot.label,
+          customerName: name.trim(),
+          phone: phone.trim(),
+          whatsapp: listing.whatsapp,
+        },
+      });
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : 'Failed to create booking');
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -154,12 +176,13 @@ export default function BookingScreen() {
               <SecondaryButton label="Back" onPress={() => setStep(2)} />
             </View>
             <TouchableOpacity
-              disabled={!canStep3}
+              disabled={!canStep3 || submitting}
               style={[styles.primaryBtn, !canStep3 && styles.disabled, { flex: 2 }]}
               onPress={confirmBooking}>
-              <Text style={styles.primaryBtnText}>Confirm booking</Text>
+              <Text style={styles.primaryBtnText}>{submitting ? 'Creating booking…' : 'Confirm booking'}</Text>
             </TouchableOpacity>
           </View>
+          {submitError ? <Text style={styles.errorText}>{submitError}</Text> : null}
         </View>
         </KoraCard>
       ) : null}
@@ -215,4 +238,10 @@ const styles = StyleSheet.create({
   slotTextActive: { color: AppTheme.colors.brandDark },
   row: { flexDirection: 'row', gap: 10 },
   summaryText: { color: AppTheme.colors.text, fontWeight: '700' },
+  errorText: {
+    marginTop: 8,
+    color: '#be123c',
+    fontSize: 12,
+    fontWeight: '700',
+  },
 });

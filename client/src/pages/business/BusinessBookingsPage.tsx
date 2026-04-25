@@ -96,7 +96,80 @@ export function BusinessBookingsPage() {
         </Link>
       </div>
 
-      <div className="overflow-hidden rounded-[2rem] border border-[var(--kora-line)] bg-[var(--kora-elevated)]/95 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:shadow-[0_18px_50px_rgba(0,0,0,0.55)]">
+      {/* Mobile-first card list */}
+      <div className="grid gap-3 md:hidden">
+        {rows.map((r, idx) => {
+          const id = rowKey(r, idx)
+          const disabled = updatingId === id
+          return (
+            <div
+              key={id}
+              className="overflow-hidden rounded-3xl border border-[var(--kora-line)] bg-[var(--kora-elevated)]/95 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:shadow-[0_18px_50px_rgba(0,0,0,0.55)]"
+            >
+              <div className="p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-base font-black text-[var(--kora-text)]">{r.guestName}</p>
+                    <p className="mt-1 text-sm font-semibold text-[var(--kora-text-secondary)]">{r.serviceName}</p>
+                    <p className="mt-2 text-xs font-bold uppercase tracking-wide text-[var(--kora-muted)]">
+                      {t('business.colTime')}
+                    </p>
+                    <p className="text-sm font-bold text-[var(--kora-text)]">{r.slotLabel}</p>
+                  </div>
+                  <span
+                    className={`shrink-0 inline-flex rounded-full px-2.5 py-1 text-[11px] font-black uppercase ${badge[r.status] ?? 'bg-zinc-100 text-zinc-800'}`}
+                  >
+                    {r.status}
+                  </span>
+                </div>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {r.status === 'pending' || r.status === 'requested' ? (
+                    <button
+                      type="button"
+                      className="flex-1 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 px-3 py-2.5 text-xs font-black text-white shadow-sm"
+                      onClick={() => applyStatus(r, idx, 'confirmed')}
+                      disabled={disabled}
+                    >
+                      {t('business.confirm')}
+                    </button>
+                  ) : null}
+                  {r.status === 'confirmed' ? (
+                    <button
+                      type="button"
+                      className="flex-1 rounded-2xl bg-orange-500 px-3 py-2.5 text-xs font-black text-white"
+                      onClick={() => applyStatus(r, idx, 'in-salon')}
+                      disabled={disabled}
+                    >
+                      Start
+                    </button>
+                  ) : null}
+                  <button
+                    type="button"
+                    className="flex-1 rounded-2xl border border-[var(--kora-line)] bg-[var(--kora-elevated-muted)] px-3 py-2.5 text-xs font-black text-[var(--kora-text)]"
+                    onClick={() => applyStatus(r, idx, 'done')}
+                    disabled={disabled}
+                  >
+                    {t('business.complete')}
+                  </button>
+                  {r.status !== 'done' && r.status !== 'no-show' ? (
+                    <button
+                      type="button"
+                      className="flex-1 rounded-2xl border border-rose-300 bg-rose-50 px-3 py-2.5 text-xs font-black text-rose-700 dark:border-rose-800 dark:bg-rose-950/35 dark:text-rose-200"
+                      onClick={() => applyStatus(r, idx, 'no-show')}
+                      disabled={disabled}
+                    >
+                      No-show
+                    </button>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Desktop table */}
+      <div className="hidden overflow-hidden rounded-[2rem] border border-[var(--kora-line)] bg-[var(--kora-elevated)]/95 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:shadow-[0_18px_50px_rgba(0,0,0,0.55)] md:block">
         <div className="overflow-x-auto">
           <table className="min-w-full text-left text-sm">
             <thead className="bg-[var(--kora-elevated-muted)]/90 text-xs font-black uppercase tracking-wide text-[var(--kora-muted)]">

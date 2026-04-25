@@ -4,22 +4,29 @@ const { seedListings, seedThreads, seedBookings } = require('../data/seed');
 
 let cachedDb = null;
 let degradedMode = false;
+let degradedReason = null;
 
 async function connectDb() {
   if (cachedDb) return cachedDb;
   if (!env.mongoUri) {
     degradedMode = true;
+    degradedReason = 'MONGODB_URI missing';
     return null;
   }
 
   try {
-    const client = new MongoClient(env.mongoUri);
+    const client = new MongoClient(env.mongoUri, {
+      serverSelectionTimeoutMS: 5000,
+    });
     await client.connect();
     cachedDb = client.db(env.mongoDb);
     await ensureSeed(cachedDb);
     return cachedDb;
-  } catch (_error) {
+  } catch (error) {
     degradedMode = true;
+    degradedReason = error?.message || 'Mongo connection failed';
+    // Keep backend online even without DB (seed/demo mode).
+    console.warn('[db] Running in degraded mode:', degradedReason);
     return null;
   }
 }
@@ -42,4 +49,8 @@ function isDegraded() {
   return degradedMode;
 }
 
-module.exports = { connectDb, isDegraded };
+function degradedInfo() {
+  return { degraded: degradedMode, reason: degradedReason };
+}
+
+module.exports = { connectDb, isDegraded, degradedInfo };

@@ -38,6 +38,12 @@ export function BookingSuccessPage() {
           {t('success.summary')}
         </p>
         <dl className="mt-3 space-y-2 text-sm">
+          {state.bookingId ? (
+            <div className="flex justify-between gap-4">
+              <dt className="text-zinc-500 dark:text-zinc-400">Booking ID</dt>
+              <dd className="font-semibold text-ink-900 dark:text-white">{state.bookingId}</dd>
+            </div>
+          ) : null}
           <div className="flex justify-between gap-4">
             <dt className="text-zinc-500 dark:text-zinc-400">{t('success.service')}</dt>
             <dd className="font-semibold text-ink-900 dark:text-white">{state.serviceName}</dd>
@@ -50,6 +56,12 @@ export function BookingSuccessPage() {
             <dt className="text-zinc-500 dark:text-zinc-400">{t('success.name')}</dt>
             <dd className="font-semibold text-ink-900 dark:text-white">{state.customerName}</dd>
           </div>
+          {state.status ? (
+            <div className="flex justify-between gap-4">
+              <dt className="text-zinc-500 dark:text-zinc-400">Status</dt>
+              <dd className="font-semibold capitalize text-ink-900 dark:text-white">{state.status}</dd>
+            </div>
+          ) : null}
         </dl>
       </div>
 

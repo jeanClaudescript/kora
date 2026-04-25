@@ -1,5 +1,64 @@
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:4001'
 
+async function readErrorMessage(res: Response, fallback: string) {
+  try {
+    const data = (await res.json()) as { error?: string }
+    if (data?.error) return data.error
+  } catch {
+    // ignore
+  }
+  return fallback
+}
+
+export type AuthApiUser = {
+  id: string
+  name: string
+  email: string
+  role: 'customer' | 'business' | 'admin'
+  businessCategory?: string
+  businessWorkerCount?: number
+  preferredCity?: string
+  interestCategories?: string[]
+}
+
+export async function loginApi(payload: { email: string; password?: string; role?: string }) {
+  const res = await fetch(`${API_BASE}/api/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+  if (!res.ok) throw new Error('Failed to login')
+  return (await res.json()) as { user: AuthApiUser }
+}
+
+export async function signupApi(payload: {
+  name: string
+  email: string
+  password?: string
+  role: 'customer' | 'business'
+  preferredCity?: string
+  businessCategory?: string
+  businessWorkerCount?: number
+}) {
+  const res = await fetch(`${API_BASE}/api/auth/signup`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+  if (!res.ok) throw new Error('Failed to signup')
+  return (await res.json()) as { user: AuthApiUser }
+}
+
+export async function demoAuthApi(role: 'customer' | 'business' | 'admin') {
+  const res = await fetch(`${API_BASE}/api/auth/demo`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ role }),
+  })
+  if (!res.ok) throw new Error('Failed to load demo user')
+  return (await res.json()) as { user: AuthApiUser }
+}
+
 export type CustomerDashboardOpts = {
   city?: string
   preferredCity?: string
@@ -83,8 +142,35 @@ export async function updateBusinessBookingStatus(
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ status }),
   })
-  if (!res.ok) throw new Error('Failed to update booking status')
+  if (!res.ok) throw new Error(await readErrorMessage(res, 'Failed to update booking status'))
   return res.json()
+}
+
+export async function createBookingApi(payload: {
+  listingSlug: string
+  serviceName: string
+  slotLabel: string
+  guestName: string
+  phone: string
+  userId?: string
+  channel?: string
+  notes?: string
+}) {
+  const res = await fetch(`${API_BASE}/api/bookings`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+  if (!res.ok) throw new Error(await readErrorMessage(res, 'Failed to create booking'))
+  return res.json() as Promise<{
+    _id?: string
+    listingSlug: string
+    serviceName: string
+    slotLabel: string
+    guestName: string
+    phone: string
+    status: string
+  }>
 }
 
 export async function getListings() {

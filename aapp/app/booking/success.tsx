@@ -12,6 +12,8 @@ function buildWaLink(whatsapp: string, text: string) {
 export default function BookingSuccessScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{
+    bookingId?: string;
+    status?: string;
     listingName: string;
     listingSlug: string;
     serviceName: string;
@@ -53,9 +55,11 @@ export default function BookingSuccessScreen() {
       <KoraCard>
       <View style={styles.summary}>
         <Text style={styles.summaryTitle}>Summary</Text>
+        {params.bookingId ? <Text style={styles.summaryItem}>Booking ID: {params.bookingId}</Text> : null}
         <Text style={styles.summaryItem}>Service: {params.serviceName}</Text>
         <Text style={styles.summaryItem}>Time: {params.slotLabel}</Text>
         <Text style={styles.summaryItem}>Name: {params.customerName}</Text>
+        {params.status ? <Text style={styles.summaryItem}>Status: {params.status}</Text> : null}
       </View>
       </KoraCard>
 

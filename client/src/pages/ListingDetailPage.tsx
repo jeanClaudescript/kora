@@ -60,19 +60,22 @@ export function ListingDetailPage() {
                 </span>
               </div>
             </div>
-            <div className="flex gap-2 overflow-x-auto p-3">
-              {images.map((src, i) => (
-                <button
-                  key={src + i}
-                  type="button"
-                  onClick={() => setImg(i)}
-                  className={`relative h-16 w-24 shrink-0 overflow-hidden rounded-lg border-2 ${
-                    i === img ? 'border-brand-600' : 'border-transparent'
-                  }`}
-                >
-                  <img src={src} alt="" className="h-full w-full object-cover" />
-                </button>
-              ))}
+            <div className="bg-[#08142f] px-3 py-3">
+              <div className="flex gap-2 overflow-x-auto">
+                {images.map((src, i) => (
+                  <button
+                    key={src + i}
+                    type="button"
+                    onClick={() => setImg(i)}
+                    className={`relative h-16 w-24 shrink-0 overflow-hidden rounded-lg border ${
+                      i === img ? 'border-sky-300 ring-2 ring-sky-400/60' : 'border-white/20'
+                    }`}
+                  >
+                    <img src={src} alt="" className="h-full w-full object-cover" />
+                    {i === img ? <span className="absolute left-2 top-2 h-2 w-2 rounded-full bg-rose-500" /> : null}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 

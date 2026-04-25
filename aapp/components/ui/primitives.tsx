@@ -2,17 +2,36 @@ import type { ReactNode } from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 import { AppTheme } from '@/constants/app-theme';
+import { useAppTheme } from '@/hooks/use-app-theme';
 
 export function KoraCard({ children }: { children: ReactNode }) {
-  return <View style={styles.card}>{children}</View>;
+  const theme = useAppTheme();
+  return (
+    <View
+      style={[
+        styles.card,
+        { borderColor: theme.colors.line, backgroundColor: theme.colors.elevated },
+      ]}>
+      {children}
+    </View>
+  );
 }
 
 export function KoraInput(props: React.ComponentProps<typeof TextInput>) {
+  const theme = useAppTheme();
   return (
     <TextInput
-      placeholderTextColor={AppTheme.colors.placeholder}
+      placeholderTextColor={theme.colors.placeholder}
       {...props}
-      style={[styles.input, props.style]}
+      style={[
+        styles.input,
+        {
+          borderColor: theme.colors.lineStrong,
+          backgroundColor: theme.colors.elevatedMuted,
+          color: theme.colors.text,
+        },
+        props.style,
+      ]}
     />
   );
 }
@@ -26,8 +45,12 @@ export function PrimaryButton({
   onPress?: () => void;
   disabled?: boolean;
 }) {
+  const theme = useAppTheme();
   return (
-    <TouchableOpacity style={[styles.primaryBtn, disabled && styles.disabled]} onPress={onPress} disabled={disabled}>
+    <TouchableOpacity
+      style={[styles.primaryBtn, { backgroundColor: theme.colors.brand }, disabled && styles.disabled]}
+      onPress={onPress}
+      disabled={disabled}>
       <Text style={styles.primaryBtnText}>{label}</Text>
     </TouchableOpacity>
   );
@@ -40,9 +63,15 @@ export function SecondaryButton({
   label: string;
   onPress?: () => void;
 }) {
+  const theme = useAppTheme();
   return (
-    <TouchableOpacity style={styles.secondaryBtn} onPress={onPress}>
-      <Text style={styles.secondaryBtnText}>{label}</Text>
+    <TouchableOpacity
+      style={[
+        styles.secondaryBtn,
+        { borderColor: theme.colors.lineStrong, backgroundColor: theme.colors.elevatedMuted },
+      ]}
+      onPress={onPress}>
+      <Text style={[styles.secondaryBtnText, { color: theme.colors.text }]}>{label}</Text>
     </TouchableOpacity>
   );
 }
@@ -56,9 +85,22 @@ export function PillChip({
   active?: boolean;
   onPress?: () => void;
 }) {
+  const theme = useAppTheme();
   return (
-    <TouchableOpacity style={[styles.chip, active && styles.chipActive]} onPress={onPress}>
-      <Text style={[styles.chipText, active && styles.chipTextActive]}>{label}</Text>
+    <TouchableOpacity
+      style={[
+        styles.chip,
+        {
+          borderColor: theme.colors.lineStrong,
+          backgroundColor: theme.colors.elevated,
+        },
+        active && {
+          borderColor: theme.colors.brand,
+          backgroundColor: theme.colors.brand,
+        },
+      ]}
+      onPress={onPress}>
+      <Text style={[styles.chipText, { color: theme.colors.text }, active && styles.chipTextActive]}>{label}</Text>
     </TouchableOpacity>
   );
 }
@@ -67,22 +109,16 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: AppTheme.radius.card,
     borderWidth: 1,
-    borderColor: AppTheme.colors.line,
-    backgroundColor: AppTheme.colors.elevated,
     padding: AppTheme.spacing.sm,
   },
   input: {
     borderWidth: 1,
-    borderColor: AppTheme.colors.lineStrong,
     borderRadius: AppTheme.radius.input,
-    backgroundColor: AppTheme.colors.elevatedMuted,
     paddingHorizontal: 12,
     paddingVertical: 10,
-    color: AppTheme.colors.text,
   },
   primaryBtn: {
     borderRadius: AppTheme.radius.input,
-    backgroundColor: AppTheme.colors.brand,
     paddingVertical: 12,
     alignItems: 'center',
   },
@@ -92,30 +128,20 @@ const styles = StyleSheet.create({
   },
   secondaryBtn: {
     borderRadius: AppTheme.radius.input,
-    borderColor: AppTheme.colors.lineStrong,
     borderWidth: 1,
-    backgroundColor: AppTheme.colors.elevatedMuted,
     paddingVertical: 12,
     alignItems: 'center',
   },
   secondaryBtnText: {
-    color: AppTheme.colors.text,
     fontWeight: '700',
   },
   chip: {
     borderRadius: AppTheme.radius.pill,
     borderWidth: 1,
-    borderColor: AppTheme.colors.lineStrong,
-    backgroundColor: AppTheme.colors.elevated,
     paddingHorizontal: 10,
     paddingVertical: 7,
   },
-  chipActive: {
-    borderColor: AppTheme.colors.brand,
-    backgroundColor: AppTheme.colors.brand,
-  },
   chipText: {
-    color: AppTheme.colors.text,
     fontSize: AppTheme.typography.caption,
     fontWeight: '700',
   },

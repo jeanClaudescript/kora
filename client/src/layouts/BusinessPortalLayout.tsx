@@ -11,6 +11,12 @@ function sideLink({ isActive }: { isActive: boolean }) {
   }`
 }
 
+function mobileTabLink({ isActive }: { isActive: boolean }) {
+  return `flex flex-1 flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2 text-[11px] font-bold transition ${
+    isActive ? 'text-white' : 'text-white/65 hover:text-white'
+  }`
+}
+
 type BusinessAccessSession = {
   mode: 'admin' | 'worker'
   workerId?: string
@@ -224,97 +230,77 @@ export function BusinessPortalLayout() {
         </div>
       </aside>
 
-      <div className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-3xl border border-[var(--kora-line)] bg-[var(--kora-elevated)]/92 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:bg-[var(--kora-elevated)]/88 dark:shadow-[0_18px_50px_rgba(0,0,0,0.55)]">
-        <header className="sticky top-0 z-20 border-b border-[var(--kora-line)]/80 bg-[var(--kora-elevated)]/90 px-4 py-2.5 shadow-[0_8px_30px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:bg-[var(--kora-elevated)]/75">
-          <div className="mx-auto mb-2 hidden max-w-6xl items-center justify-between rounded-2xl border border-[var(--kora-line)]/70 bg-[var(--kora-elevated-muted)]/65 px-3 py-1.5 text-[11px] font-semibold text-[var(--kora-text-secondary)] md:flex">
-            <p>Business command center</p>
-            <p className="text-emerald-600 dark:text-emerald-300">{canManage ? 'Admin mode active' : 'Worker mode active'}</p>
-          </div>
-          <div className="mx-auto flex max-w-6xl items-center justify-between gap-3">
-            <div className="flex min-w-0 items-center gap-3">
-              <Link to="/business" className="hidden items-center gap-2 rounded-xl border border-[var(--kora-line)] bg-[var(--kora-elevated)] px-2.5 py-1.5 lg:flex">
-                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-fuchsia-600 via-violet-600 to-sky-500 text-xs font-black text-white shadow-sm">
-                  K
-                </span>
-                <span className="leading-tight">
-                  <span className="block text-xs font-black text-[var(--kora-text)]">Kora Business</span>
-                  <span className="block text-[10px] text-[var(--kora-text-secondary)]">Live operations</span>
-                </span>
-              </Link>
-              <div className="flex items-center gap-1 overflow-x-auto pb-1 lg:hidden">
-                <NavLink
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-3xl border border-white/10 bg-[#070b18]/95 shadow-[0_24px_70px_rgba(2,6,23,0.55)] backdrop-blur-xl">
+        <header className="sticky top-0 z-20 border-b border-white/10 bg-[#080f23]/90 px-4 py-3 backdrop-blur-2xl">
+          <div className="mx-auto max-w-6xl">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <Link
                   to={canManage ? '/business' : '/business/workspaces'}
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/15 bg-white/5 text-base font-black text-white"
                   aria-label={canManage ? t('business.navOverview') : t('business.navWorkspaces')}
-                  title={canManage ? t('business.navOverview') : t('business.navWorkspaces')}
-                  className="shrink-0 rounded-full bg-gradient-to-r from-fuchsia-600 to-violet-600 p-2 text-sm font-bold text-white shadow-sm"
                 >
                   {canManage ? '◎' : '🧩'}
-                </NavLink>
-                {canManage ? (
-                  <>
-                    <NavLink
-                      to="/business/insights"
-                      aria-label={t('business.navInsights')}
-                      title={t('business.navInsights')}
-                      className="shrink-0 rounded-full border border-[var(--kora-line)] bg-[var(--kora-elevated-muted)]/80 p-2 text-sm font-bold text-[var(--kora-text)]"
-                    >
-                      ◆
-                    </NavLink>
-                    <NavLink
-                      to="/business/bookings"
-                      aria-label={t('business.navBookings')}
-                      title={t('business.navBookings')}
-                      className="shrink-0 rounded-full border border-[var(--kora-line)] bg-[var(--kora-elevated-muted)]/80 p-2 text-sm font-bold text-[var(--kora-text)]"
-                    >
-                      ▤
-                    </NavLink>
-                    <NavLink
-                      to="/business/messages"
-                      aria-label={t('business.navMessages')}
-                      title={t('business.navMessages')}
-                      className="shrink-0 rounded-full border border-[var(--kora-line)] bg-[var(--kora-elevated-muted)]/80 p-2 text-sm font-bold text-[var(--kora-text)]"
-                    >
-                      💬
-                    </NavLink>
-                  </>
-                ) : null}
-                <NavLink
-                  to="/business/workspaces"
-                  aria-label={t('business.navWorkspaces')}
-                  title={t('business.navWorkspaces')}
-                  className="shrink-0 rounded-full border border-[var(--kora-line)] bg-[var(--kora-elevated-muted)]/80 p-2 text-sm font-bold text-[var(--kora-text)]"
-                >
-                  🧩
-                </NavLink>
-              </div>
-              <p className="hidden text-sm font-semibold text-[var(--kora-text-secondary)] xl:block">
-                {canManage
-                  ? t('business.welcome', { name: user?.name ?? '' })
-                  : `Worker room · ${activeSession.workerName ?? ''}`}
-              </p>
-              <span className="hidden rounded-full border border-emerald-400/35 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-300 xl:inline-flex">
-                {canManage ? 'Admin access' : 'Worker access'}
-              </span>
-            </div>
-            <div className="flex shrink-0 items-center gap-2">
-              <Link
-                to="/"
-                className="rounded-full border border-[var(--kora-line)] bg-[var(--kora-elevated)] px-4 py-2 text-xs font-bold text-[var(--kora-text)] shadow-sm transition hover:border-fuchsia-300 hover:text-fuchsia-700 dark:hover:border-fuchsia-500 dark:hover:text-fuchsia-300"
-              >
-                {t('business.viewMarketplace')}
-              </Link>
-              {canManage ? (
-                <Link
-                  to="/business/workspaces"
-                  className="rounded-full bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:brightness-105"
-                >
-                  Hire + team
                 </Link>
+                <Link to="/business" className="inline-flex items-center gap-2 rounded-2xl bg-white/5 px-2.5 py-1.5">
+                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-fuchsia-500 via-violet-600 to-sky-500 text-xs font-black text-white">
+                    K
+                  </span>
+                  <span className="hidden leading-tight sm:block">
+                    <span className="block text-xs font-black text-white">Kora Business</span>
+                    <span className="block text-[10px] font-semibold text-slate-300">Modern operations</span>
+                  </span>
+                </Link>
+              </div>
+              <div className="flex items-center gap-2">
+                <Link
+                  to="/"
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-white/5 text-xs text-white"
+                  aria-label={t('business.viewMarketplace')}
+                  title={t('business.viewMarketplace')}
+                >
+                  ⌂
+                </Link>
+                {canManage ? (
+                  <Link
+                    to="/business/workspaces"
+                    className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-r from-indigo-600 to-violet-600 text-sm font-bold text-white"
+                    aria-label="Hire + team"
+                    title="Hire + team"
+                  >
+                    +
+                  </Link>
+                ) : null}
+              </div>
+            </div>
+            <div className="mt-2 flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {canManage ? (
+                <>
+                  <NavLink to="/business" end className={sideLink}>
+                    {t('business.navOverview')}
+                  </NavLink>
+                  <NavLink to="/business/insights" className={sideLink}>
+                    {t('business.navInsights')}
+                  </NavLink>
+                  <NavLink to="/business/bookings" className={sideLink}>
+                    {t('business.navBookings')}
+                  </NavLink>
+                  <NavLink to="/business/messages" className={sideLink}>
+                    {t('business.navMessages')}
+                  </NavLink>
+                </>
               ) : null}
+              <NavLink to="/business/workspaces" className={sideLink}>
+                {t('business.navWorkspaces')}
+              </NavLink>
+            </div>
+            <div className="mt-2 hidden items-center justify-between rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-semibold text-slate-200 md:flex">
+              <p>{canManage ? t('business.welcome', { name: user?.name ?? '' }) : `Worker room · ${activeSession.workerName ?? ''}`}</p>
+              <p>{canManage ? `Admin room · ${workerCount} workers` : 'Worker access'}</p>
             </div>
           </div>
         </header>
-        <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 sm:py-8">
+        <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 pb-28 sm:px-6 sm:py-8 lg:pb-8">
           <Outlet context={contextValue} />
         </main>
         <footer className="border-t border-[var(--kora-line)] bg-[var(--kora-elevated-muted)]/70 px-4 py-3">
@@ -328,6 +314,59 @@ export function BusinessPortalLayout() {
           </div>
         </footer>
       </div>
+
+      <nav className="fixed bottom-3 left-3 right-3 z-40 lg:hidden">
+        <div className="mx-auto max-w-6xl">
+          <div className="rounded-[1.6rem] border border-white/12 bg-[#0b1020]/80 p-2 shadow-[0_18px_50px_rgba(0,0,0,0.55)] backdrop-blur-2xl">
+            <div className="flex items-stretch gap-2">
+              {canManage ? (
+                <>
+                  <NavLink to="/business" end className={mobileTabLink}>
+                    <span className="text-base" aria-hidden>
+                      ◎
+                    </span>
+                    <span className="leading-none">{t('business.navOverview')}</span>
+                  </NavLink>
+                  <NavLink to="/business/bookings" className={mobileTabLink}>
+                    <span className="text-base" aria-hidden>
+                      ▤
+                    </span>
+                    <span className="leading-none">{t('business.navBookings')}</span>
+                  </NavLink>
+                  <NavLink to="/business/messages" className={mobileTabLink}>
+                    <span className="text-base" aria-hidden>
+                      💬
+                    </span>
+                    <span className="leading-none">{t('business.navMessages')}</span>
+                  </NavLink>
+                  <NavLink to="/business/insights" className={mobileTabLink}>
+                    <span className="text-base" aria-hidden>
+                      ◆
+                    </span>
+                    <span className="leading-none">{t('business.navInsights')}</span>
+                  </NavLink>
+                </>
+              ) : null}
+              <NavLink to="/business/workspaces" className={mobileTabLink}>
+                <span className="text-base" aria-hidden>
+                  🧩
+                </span>
+                <span className="leading-none">{t('business.navWorkspaces')}</span>
+              </NavLink>
+              <button
+                type="button"
+                onClick={() => logout()}
+                className="flex flex-1 flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2 text-[11px] font-bold text-white/65 transition hover:text-white"
+              >
+                <span className="text-base" aria-hidden>
+                  ⎋
+                </span>
+                <span className="leading-none">{t('auth.signOut')}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </nav>
     </div>
   )
 }

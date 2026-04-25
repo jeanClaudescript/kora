@@ -1,11 +1,13 @@
-const { isDegraded } = require('../config/db');
+const { degradedInfo } = require('../config/db');
 const { ok } = require('../utils/http');
 
 function getHealth(_req, res) {
+  const info = degradedInfo();
   return ok(res, {
     ok: true,
     service: 'rbooking-server',
-    db: isDegraded() ? 'degraded' : 'ready',
+    db: info.degraded ? 'degraded' : 'ready',
+    dbReason: info.degraded ? info.reason : undefined,
     timestamp: new Date().toISOString(),
   });
 }

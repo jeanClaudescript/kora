@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import type { AuthUser, UserRole } from '../../auth/AuthContext'
 import { useAuth } from '../../auth/AuthContext'
+import { demoAuthApi, loginApi } from '../../lib/api'
 
 export function LoginPage() {
   const { t } = useTranslation()
@@ -25,47 +26,38 @@ export function LoginPage() {
     else navigate('/', { replace: true })
   }
 
-  function signIn(e: FormEvent) {
+  async function signIn(e: FormEvent) {
     e.preventDefault()
-    const u: AuthUser = {
-      id: 'u1',
-      name: email.split('@')[0] || 'Guest',
-      email: email || 'you@kora.app',
-      role: 'customer',
+    try {
+      const { user } = await loginApi({ email, password, role: 'customer' })
+      login(user as AuthUser)
+      goAfterLogin(user.role)
+    } catch {
+      const fallback: AuthUser = {
+        id: 'u1',
+        name: email.split('@')[0] || 'Guest',
+        email: email || 'you@kora.app',
+        role: 'customer',
+      }
+      login(fallback)
+      goAfterLogin('customer')
     }
-    login(u)
-    goAfterLogin('customer')
   }
 
-  function demo(role: UserRole) {
-    const profiles: Record<UserRole, AuthUser> = {
-      customer: {
-        id: 'c-demo',
-        name: 'Aline',
-        email: 'aline@demo.kora',
-        role: 'customer',
-        preferredCity: 'Kigali',
-        interestCategories: ['Salon', 'Spa', 'Barber'],
-      },
-      business: {
-        id: 'b-demo',
-        name: 'Amahoro Glow',
-        email: 'owner@amahoro.demo',
-        role: 'business',
-        businessCategory: 'Salon',
-        businessWorkerCount: 48,
-        preferredCity: 'Kigali',
-        interestCategories: ['Salon'],
-      },
-      admin: {
-        id: 'a-demo',
-        name: 'Ops Admin',
-        email: 'admin@kora.app',
-        role: 'admin',
-      },
+  async function demo(role: UserRole) {
+    try {
+      const { user } = await demoAuthApi(role)
+      login(user as AuthUser)
+      goAfterLogin(user.role)
+    } catch {
+      const fallback: Record<UserRole, AuthUser> = {
+        customer: { id: 'c-demo', name: 'Aline', email: 'aline@demo.kora', role: 'customer' },
+        business: { id: 'b-demo', name: 'Amahoro Glow', email: 'owner@amahoro.demo', role: 'business' },
+        admin: { id: 'a-demo', name: 'Ops Admin', email: 'admin@kora.app', role: 'admin' },
+      }
+      login(fallback[role])
+      goAfterLogin(role)
     }
-    login(profiles[role])
-    goAfterLogin(role)
   }
 
   return (

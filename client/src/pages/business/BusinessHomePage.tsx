@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../auth/AuthContext'
 import { getBusinessDashboardWithContext } from '../../lib/api'
+import { LocationPickerModal } from '../../components/location/LocationPickerModal'
 
 type BizFeedItem = { id: string; event: string; detail: string; channel: string; ago: string }
 type BizHotspot = { area: string; venues: number; avgRating: number }
@@ -112,6 +113,23 @@ export function BusinessHomePage() {
   const [dash, setDash] = useState<BusinessDashboardPayload | null>(null)
   const [geoLabel, setGeoLabel] = useState<'off' | 'on' | 'pending'>('off')
   const [geoCoords, setGeoCoords] = useState<{ lat: number; lng: number } | null>(null)
+  const [locationOpen, setLocationOpen] = useState(false)
+
+  useEffect(() => {
+    try {
+      const key = `rb_biz_location_v1_${user?.id ?? 'biz'}`
+      const raw = localStorage.getItem(key)
+      if (raw) {
+        const parsed = JSON.parse(raw) as { lat: number; lng: number }
+        if (Number.isFinite(parsed?.lat) && Number.isFinite(parsed?.lng)) {
+          setGeoCoords({ lat: parsed.lat, lng: parsed.lng })
+          setGeoLabel('on')
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }, [user?.id])
 
   useEffect(() => {
     let cancelled = false
@@ -147,19 +165,7 @@ export function BusinessHomePage() {
   }, [geoCoords, user?.businessCategory, user?.businessWorkerCount])
 
   function enableNearMe() {
-    if (!('geolocation' in navigator)) {
-      setGeoLabel('off')
-      return
-    }
-    setGeoLabel('pending')
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setGeoCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude })
-        setGeoLabel('on')
-      },
-      () => setGeoLabel('off'),
-      { enableHighAccuracy: true, timeout: 10_000, maximumAge: 60_000 },
-    )
+    setLocationOpen(true)
   }
 
   const rep = dash?.reputation
@@ -173,6 +179,23 @@ export function BusinessHomePage() {
 
   return (
     <div className="space-y-8">
+      <LocationPickerModal
+        open={locationOpen}
+        title="Pin your business location"
+        initialValue={geoCoords ? { lat: geoCoords.lat, lng: geoCoords.lng, label: 'Pinned location' } : null}
+        onClose={() => setLocationOpen(false)}
+        onPick={(loc) => {
+          setGeoCoords({ lat: loc.lat, lng: loc.lng })
+          setGeoLabel('on')
+          try {
+            const key = `rb_biz_location_v1_${user?.id ?? 'biz'}`
+            localStorage.setItem(key, JSON.stringify({ lat: loc.lat, lng: loc.lng, label: loc.label }))
+          } catch {
+            // ignore
+          }
+          setLocationOpen(false)
+        }}
+      />
       <section className="relative overflow-hidden rounded-[2rem] border border-[var(--kora-line)] bg-gradient-to-br from-[var(--kora-elevated)] via-[var(--kora-elevated-muted)]/60 to-[var(--kora-elevated)] p-6 sm:p-8">
         <div
           aria-hidden
@@ -207,10 +230,10 @@ export function BusinessHomePage() {
                 onClick={enableNearMe}
                 className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-fuchsia-600 to-violet-600 px-4 py-2.5 text-xs font-bold text-white shadow-md transition hover:brightness-105"
               >
-                {geoLabel === 'on' ? 'Near me: on' : geoLabel === 'pending' ? 'Locating…' : 'Enable near-me insights'}
+                {geoLabel === 'on' ? 'Location: set' : geoLabel === 'pending' ? 'Locating…' : 'Set location'}
               </button>
               <span className="inline-flex items-center rounded-2xl border border-[var(--kora-line)] bg-[var(--kora-elevated)]/80 px-3 py-2 text-[11px] font-semibold text-[var(--kora-text-secondary)]">
-                {dash?.localDiscovery?.headline ?? 'Connect location to prioritize neighborhood demand.'}
+                {dash?.localDiscovery?.headline ?? 'Location helps near-me discovery.'}
               </span>
             </div>
           </div>

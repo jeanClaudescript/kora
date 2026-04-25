@@ -16,7 +16,7 @@ export default function AccountMessagesScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Messages</Text>
-      <Text style={styles.sub}>Chat thread style aligned with client.</Text>
+      <Text style={styles.sub}>Stay synced with businesses across app and WhatsApp follow-up.</Text>
       <View style={styles.shell}>
         <ScrollView style={styles.sidebar}>
           {threads.map((thread) => {
@@ -37,15 +37,16 @@ export default function AccountMessagesScreen() {
           <Text style={styles.chatHeader}>{current.biz}</Text>
           <View style={styles.messages}>
             <View style={styles.bizBubble}>
-              <Text style={styles.bizText}>Hi, we can adjust your slot to 11:15.</Text>
+              <Text style={styles.bizText}>Hello! Your preferred barber is free at 11:15. Want us to lock it?</Text>
             </View>
             <View style={styles.userBubble}>
-              <Text style={styles.userText}>Perfect, please confirm. Thank you.</Text>
+              <Text style={styles.userText}>Yes please, confirm 11:15 and I will arrive 10 min early.</Text>
             </View>
           </View>
           <KoraInput placeholder="Type a message..." style={styles.input} />
         </View>
       </View>
+      <Text style={styles.footerNote}>One thread for app and WhatsApp confirmations.</Text>
     </View>
   );
 }
@@ -69,4 +70,5 @@ const styles = StyleSheet.create({
   bizText: { color: AppTheme.colors.text, fontSize: 13 },
   userText: { color: '#fff', fontSize: 13 },
   input: { borderTopWidth: 1, borderTopColor: AppTheme.colors.line, borderRadius: 0, backgroundColor: AppTheme.colors.elevated },
+  footerNote: { marginTop: 10, textAlign: 'center', color: AppTheme.colors.muted, fontSize: 11, fontWeight: '600' },
 });

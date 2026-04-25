@@ -2,6 +2,8 @@ import { useMemo, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { getListing } from '../data/catalog'
 import type { ServiceItem } from '../data/catalog'
+import { useAuth } from '../auth/AuthContext'
+import { createBookingApi } from '../lib/api'
 import { formatDuration, formatRwf } from '../lib/format'
 import type { BookingSuccessState } from '../types/booking'
 
@@ -32,6 +34,7 @@ function BookingPageInner() {
   const { slug } = useParams()
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
+  const { user } = useAuth()
   const listing = slug ? getListing(slug) : undefined
 
   const preService = searchParams.get('service')
@@ -47,6 +50,8 @@ function BookingPageInner() {
   const [slotId, setSlotId] = useState<string | null>(null)
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState('')
 
   const slotLabel = useMemo(
     () => SLOTS.find((s) => s.id === slotId)?.label ?? '',
@@ -71,18 +76,37 @@ function BookingPageInner() {
   const can2 = slot != null && !slot.disabled
   const can3 = name.trim().length >= 2 && phone.trim().length >= 8
 
-  function submit() {
+  async function submit() {
     if (!service || !can2) return
-    const state: BookingSuccessState = {
-      listingName: L.name,
-      listingSlug: L.slug,
-      serviceName: service.name,
-      slotLabel,
-      customerName: name.trim(),
-      phone: phone.trim(),
-      whatsapp: L.whatsapp,
+    setSubmitting(true)
+    setSubmitError('')
+    try {
+      const saved = await createBookingApi({
+        listingSlug: L.slug,
+        serviceName: service.name,
+        slotLabel,
+        guestName: name.trim(),
+        phone: phone.trim(),
+        userId: user?.id ?? 'guest',
+        channel: 'web',
+      })
+      const state: BookingSuccessState = {
+        bookingId: String(saved._id ?? ''),
+        listingName: L.name,
+        listingSlug: L.slug,
+        serviceName: service.name,
+        slotLabel,
+        customerName: name.trim(),
+        phone: phone.trim(),
+        status: saved.status,
+        whatsapp: L.whatsapp,
+      }
+      navigate('/booking/success', { state })
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : 'Failed to create booking')
+    } finally {
+      setSubmitting(false)
     }
-    navigate('/booking/success', { state })
   }
 
   return (
@@ -264,13 +288,18 @@ function BookingPageInner() {
                 </button>
                 <button
                   type="button"
-                  disabled={!can3}
+                  disabled={!can3 || submitting}
                   onClick={submit}
                   className="h-12 flex-[2] rounded-xl bg-brand-600 text-sm font-bold text-white disabled:opacity-40"
                 >
-                  Confirm &amp; open WhatsApp
+                  {submitting ? 'Creating booking…' : 'Confirm & open WhatsApp'}
                 </button>
               </div>
+              {submitError ? (
+                <p className="rounded-xl border border-rose-300 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-300">
+                  {submitError}
+                </p>
+              ) : null}
             </div>
           ) : null}
         </div>

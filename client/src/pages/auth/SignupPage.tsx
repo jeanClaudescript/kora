@@ -5,6 +5,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import type { UserRole } from '../../auth/AuthContext'
 import { useAuth } from '../../auth/AuthContext'
 import { categories } from '../../data/catalog'
+import { signupApi } from '../../lib/api'
 
 export function SignupPage() {
   const { t } = useTranslation()
@@ -21,18 +22,31 @@ export function SignupPage() {
   const [workerCount, setWorkerCount] = useState(10)
   const [preferredCity, setPreferredCity] = useState('Kigali')
 
-  function onSubmit(e: FormEvent) {
+  async function onSubmit(e: FormEvent) {
     e.preventDefault()
-    login({
-      id: 'new',
-      name: name.trim() || 'New user',
-      email: email.trim() || 'user@kora.app',
-      role,
-      preferredCity: preferredCity.trim() || 'Kigali',
-      businessCategory: role === 'business' ? businessCategory : undefined,
-      businessWorkerCount: role === 'business' ? workerCount : undefined,
-      interestCategories: role === 'business' ? [businessCategory] : ['Salon', 'Barber', 'Spa'],
-    })
+    try {
+      const { user } = await signupApi({
+        name: name.trim() || 'New user',
+        email: email.trim() || 'user@kora.app',
+        password,
+        role: role === 'business' ? 'business' : 'customer',
+        preferredCity: preferredCity.trim() || 'Kigali',
+        businessCategory: role === 'business' ? businessCategory : undefined,
+        businessWorkerCount: role === 'business' ? workerCount : undefined,
+      })
+      login(user)
+    } catch {
+      login({
+        id: 'new',
+        name: name.trim() || 'New user',
+        email: email.trim() || 'user@kora.app',
+        role,
+        preferredCity: preferredCity.trim() || 'Kigali',
+        businessCategory: role === 'business' ? businessCategory : undefined,
+        businessWorkerCount: role === 'business' ? workerCount : undefined,
+        interestCategories: role === 'business' ? [businessCategory] : ['Salon', 'Barber', 'Spa'],
+      })
+    }
     if (role === 'business') navigate('/business', { replace: true })
     else navigate('/', { replace: true })
   }

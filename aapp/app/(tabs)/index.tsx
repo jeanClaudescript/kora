@@ -1,9 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import * as Linking from 'expo-linking';
 
-import { ListingCard } from '@/components/listing-card';
-import { KoraCard, KoraInput, PillChip, PrimaryButton } from '@/components/ui/primitives';
+import { SpotlightCard } from '@/components/spotlight-card';
 import { AppTheme } from '@/constants/app-theme';
 import { categories, listings } from '@/data/catalog';
 import { getCustomerDashboard, getListings } from '@/lib/api';
@@ -25,14 +23,26 @@ type DashPayload = {
   bookingPeace?: {
     policySummary?: string;
     reminderCadence?: string[];
-    tips?: Array<{ id: string; title: string; body: string }>;
+    tips?: { id: string; title: string; body: string }[];
     noShowGraceMinutes?: number;
+  };
+  uiParity?: {
+    tokens?: { spacing?: { screen?: number; chipGap?: number }; typography?: { h1?: number } };
+    toggles?: { boldSectionTitles?: boolean };
   };
 };
 
 export default function HomeScreen() {
   const [dash, setDash] = useState<DashPayload | null>(null);
   const [liveListings, setLiveListings] = useState(listings);
+  const [category, setCategory] = useState('all');
+  const [categoryOpen, setCategoryOpen] = useState(false);
+  const screenPad = Number(dash?.uiParity?.tokens?.spacing?.screen || 16);
+  const titleSize = Number(dash?.uiParity?.tokens?.typography?.h1 || 30);
+  const boldTitle = dash?.uiParity?.toggles?.boldSectionTitles ?? true;
+  const filteredListings =
+    category === 'all' ? liveListings : liveListings.filter((item) => item.category === category);
+  const selectedCategory = categories.find((c) => c.id === category) ?? categories[0];
 
   useEffect(() => {
     getCustomerDashboard('guest', { city: 'Kigali', visitStyle: 'balanced' })
@@ -46,99 +56,56 @@ export default function HomeScreen() {
   }, []);
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView style={styles.container} contentContainerStyle={[styles.content, { padding: screenPad }]}>
       <Text style={styles.kicker}>RECOMMENDED FOR YOU</Text>
-      <Text style={styles.title}>Book trusted services across Kigali</Text>
-      <Text style={styles.subtitle}>
-        Discover top-rated salons, spas and local services with a clean booking flow.
+      <Text style={[styles.title, { fontSize: titleSize, fontWeight: boldTitle ? '900' : '800' }]}>
+        Book trusted services across Kigali
       </Text>
+      <Text style={styles.subtitle}>Discover top-rated salons, spas and local services with a clean booking flow.</Text>
       {dash?.mindset?.likelyIntent ? <Text style={styles.insight}>{dash.mindset.likelyIntent}</Text> : null}
-      {dash?.mindset?.joyHook && dash?.mindset?.needSummary ? (
-        <Text style={styles.insightSub}>
-          {dash.mindset.joyHook} · {dash.mindset.needSummary}
-        </Text>
-      ) : null}
+      <Text style={styles.insightSub}>
+        Short hops from where you already are — less zig-zag. · One thread that remembers your last visit and preferences.
+      </Text>
 
-      {dash?.recentVisits?.length ? (
-        <KoraCard>
-          <Text style={styles.visitTitle}>{"Where you're headed"}</Text>
-          <Text style={styles.visitHint}>Open maps for each stop.</Text>
-          {dash.recentVisits.map((v) => (
-            <View key={v.id} style={styles.visitRow}>
-              <View style={{ flex: 1, minWidth: 0 }}>
-                <Text style={styles.visitVenue}>{v.venueName}</Text>
-                <Text style={styles.visitMeta}>
-                  {v.serviceName} · {v.area}, {v.city}
+      <View style={styles.sectionHead}>
+        <Text style={styles.sectionTitle}>Featured spots</Text>
+        <Text style={styles.sectionMore}>...</Text>
+      </View>
+      <View style={styles.dropdownWrap}>
+        <Text style={styles.dropdownLabel}>Category</Text>
+        <Pressable style={styles.dropdownBtn} onPress={() => setCategoryOpen((v) => !v)}>
+          <Text style={styles.dropdownBtnText}>
+            {selectedCategory.icon} {selectedCategory.label}
+          </Text>
+          <Text style={styles.dropdownCaret}>{categoryOpen ? '▴' : '▾'}</Text>
+        </Pressable>
+        {categoryOpen ? (
+          <View style={styles.dropdownList}>
+            {categories.map((c) => (
+              <Pressable
+                key={c.id}
+                style={[styles.dropdownItem, c.id === category && styles.dropdownItemActive]}
+                onPress={() => {
+                  setCategory(c.id);
+                  setCategoryOpen(false);
+                }}
+              >
+                <Text style={[styles.dropdownItemText, c.id === category && styles.dropdownItemTextActive]}>
+                  {c.icon} {c.label}
                 </Text>
-              </View>
-              {v.mapUrl ? (
-                <Pressable style={styles.mapBtn} onPress={() => Linking.openURL(v.mapUrl!)}>
-                  <Text style={styles.mapBtnText}>Map</Text>
-                </Pressable>
-              ) : null}
-            </View>
-          ))}
-        </KoraCard>
-      ) : null}
-
-      {dash?.bookingPeace?.tips?.length ? (
-        <KoraCard>
-          <Text style={styles.visitTitle}>Booking peace of mind</Text>
-          <Text style={styles.visitHint}>{dash.bookingPeace.policySummary}</Text>
-          {dash.bookingPeace.reminderCadence?.length ? (
-            <Text style={styles.cadence}>{dash.bookingPeace.reminderCadence.join(' · ')}</Text>
-          ) : null}
-          {dash.bookingPeace.tips.map((tip) => (
-            <View key={tip.id} style={styles.tipBlock}>
-              <Text style={styles.tipTitle}>{tip.title}</Text>
-              <Text style={styles.tipBody}>{tip.body}</Text>
-            </View>
-          ))}
-        </KoraCard>
-      ) : null}
-
-      <KoraCard>
-        <View style={styles.searchPanel}>
-          <KoraInput placeholder="Service name" />
-          <KoraInput placeholder="City (Kigali)" />
-          <PrimaryButton label="Search" />
-        </View>
-      </KoraCard>
-
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
-        {categories.map((cat) => (
-          <PillChip key={cat.id} label={`${cat.icon} ${cat.label}`} />
+              </Pressable>
+            ))}
+          </View>
+        ) : null}
+      </View>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
+        {filteredListings.slice(0, 6).map((listing) => (
+          <SpotlightCard key={listing.slug} listing={listing} />
         ))}
       </ScrollView>
 
-      <Text style={styles.sectionTitle}>Featured spots</Text>
-      {liveListings.map((listing) => (
-        <ListingCard key={listing.slug} listing={listing} />
-      ))}
-
-      <KoraCard>
-        <Text style={styles.businessTitle}>Business live operations</Text>
-        <Text style={styles.businessSub}>
-          Real-time feed, automations, and fast staff controls built for 24/7 businesses.
-        </Text>
-        <View style={styles.businessList}>
-          {[
-            'Live booking activity feed',
-            'Smart slot fill and delay actions',
-            'Retention campaigns and reminders',
-          ].map((item) => (
-            <Text key={item} style={styles.businessItem}>
-              • {item}
-            </Text>
-          ))}
-        </View>
-        <View style={{ marginTop: 10 }}>
-          <PrimaryButton
-            label="Download App"
-            onPress={() => Linking.openURL('application-22fa0176-41e6-4353-91e8-112e185f942a.apk')}
-          />
-        </View>
-      </KoraCard>
+      <Text style={styles.seeMore}>See more</Text>
+      <Text style={styles.seeMoreSub}>View all listings</Text>
     </ScrollView>
   );
 }
@@ -153,10 +120,9 @@ const styles = StyleSheet.create({
     paddingBottom: 100,
   },
   kicker: {
-    color: AppTheme.colors.brand,
-    fontWeight: '800',
-    fontSize: 11,
-    letterSpacing: 1,
+    color: AppTheme.colors.textSecondary,
+    fontWeight: '600',
+    fontSize: 12,
   },
   title: {
     marginTop: 4,
@@ -164,62 +130,59 @@ const styles = StyleSheet.create({
     fontSize: 30,
     lineHeight: 36,
     fontWeight: '900',
+    textAlign: 'center',
   },
   subtitle: {
-    marginTop: 8,
+    marginTop: 6,
     color: AppTheme.colors.textSecondary,
     fontSize: 14,
+    textAlign: 'center',
   },
-  insight: { marginTop: 8, color: '#7c3aed', fontSize: 13, fontWeight: '800', lineHeight: 18 },
+  insight: { marginTop: 10, color: '#2563EB', fontSize: 13, fontWeight: '800', lineHeight: 18, textAlign: 'center' },
   insightSub: {
-    marginTop: 6,
+    marginTop: 8,
     color: AppTheme.colors.textSecondary,
     fontSize: 12,
     fontWeight: '600',
     lineHeight: 17,
+    textAlign: 'center',
   },
-  visitTitle: { fontSize: 16, fontWeight: '900', color: AppTheme.colors.text },
-  visitHint: { marginTop: 4, fontSize: 12, color: AppTheme.colors.textSecondary, marginBottom: 10 },
-  visitRow: {
+  sectionHead: { marginTop: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  sectionTitle: { fontSize: 16, fontWeight: '900', color: AppTheme.colors.text },
+  sectionMore: { fontSize: 18, fontWeight: '900', color: AppTheme.colors.textSecondary },
+  dropdownWrap: { marginTop: 6 },
+  dropdownLabel: { fontSize: 11, fontWeight: '800', color: AppTheme.colors.textSecondary, marginBottom: 6, textTransform: 'uppercase' },
+  dropdownBtn: {
+    borderWidth: 1,
+    borderColor: AppTheme.colors.lineStrong,
+    backgroundColor: AppTheme.colors.elevated,
+    borderRadius: 12,
+    minHeight: 44,
+    paddingHorizontal: 12,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    justifyContent: 'space-between',
+  },
+  dropdownBtnText: { color: AppTheme.colors.text, fontWeight: '800', fontSize: 13 },
+  dropdownCaret: { color: AppTheme.colors.muted, fontWeight: '900' },
+  dropdownList: {
+    marginTop: 6,
+    borderWidth: 1,
+    borderColor: AppTheme.colors.line,
+    borderRadius: 12,
+    backgroundColor: AppTheme.colors.elevated,
+    overflow: 'hidden',
+  },
+  dropdownItem: {
+    paddingHorizontal: 12,
     paddingVertical: 10,
     borderTopWidth: 1,
     borderTopColor: AppTheme.colors.line,
   },
-  visitVenue: { fontSize: 15, fontWeight: '800', color: AppTheme.colors.text },
-  visitMeta: { marginTop: 2, fontSize: 12, color: AppTheme.colors.textSecondary },
-  mapBtn: {
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    backgroundColor: '#db2777',
-  },
-  mapBtnText: { color: '#fff', fontWeight: '800', fontSize: 12 },
-  cadence: {
-    marginTop: 6,
-    marginBottom: 8,
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#047857',
-  },
-  tipBlock: { marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: AppTheme.colors.line },
-  tipTitle: { fontSize: 14, fontWeight: '900', color: AppTheme.colors.text },
-  tipBody: { marginTop: 4, fontSize: 12, color: AppTheme.colors.textSecondary, lineHeight: 17 },
-  searchPanel: { marginTop: 2, gap: 8 },
-  chips: {
-    gap: 8,
-    paddingVertical: 14,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: AppTheme.colors.text,
-    marginBottom: 10,
-  },
-  businessTitle: { color: AppTheme.colors.text, fontSize: 18, fontWeight: '900' },
-  businessSub: { marginTop: 4, color: AppTheme.colors.textSecondary, fontSize: 13 },
-  businessList: { marginTop: 8, gap: 3 },
-  businessItem: { color: AppTheme.colors.text, fontWeight: '600', fontSize: 13 },
+  dropdownItemActive: { backgroundColor: AppTheme.colors.brandSoft },
+  dropdownItemText: { color: AppTheme.colors.text, fontSize: 13, fontWeight: '700' },
+  dropdownItemTextActive: { color: AppTheme.colors.brandDark, fontWeight: '900' },
+  row: { gap: 14, paddingVertical: 10, paddingRight: 12 },
+  seeMore: { marginTop: 14, textAlign: 'center', color: '#2563EB', fontWeight: '800' },
+  seeMoreSub: { marginTop: 4, textAlign: 'center', color: AppTheme.colors.textSecondary, fontWeight: '700' },
 });

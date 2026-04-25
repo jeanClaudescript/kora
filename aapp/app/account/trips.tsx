@@ -20,7 +20,7 @@ export default function AccountTripsScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.title}>My bookings</Text>
-      <Text style={styles.sub}>Calendar-style list matching the client view.</Text>
+      <Text style={styles.sub}>Calendar-style list — swap for API-driven cards when your DB is ready.</Text>
       {demoTrips.map((trip) => (
         <KoraCard key={trip.id}>
         <View style={styles.card}>

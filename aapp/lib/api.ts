@@ -1,5 +1,64 @@
 const API_BASE = process.env.EXPO_PUBLIC_API_BASE_URL ?? 'http://localhost:4001';
 
+async function readErrorMessage(res: Response, fallback: string) {
+  try {
+    const data = (await res.json()) as { error?: string };
+    if (data?.error) return data.error;
+  } catch {
+    // ignore
+  }
+  return fallback;
+}
+
+export type AuthApiUser = {
+  id: string;
+  name: string;
+  email: string;
+  role: 'customer' | 'business' | 'admin';
+  businessCategory?: string;
+  businessWorkerCount?: number;
+  preferredCity?: string;
+  interestCategories?: string[];
+};
+
+export async function loginApi(payload: { email: string; password?: string; role?: string }) {
+  const res = await fetch(`${API_BASE}/api/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error('Failed to login');
+  return (await res.json()) as { user: AuthApiUser };
+}
+
+export async function signupApi(payload: {
+  name: string;
+  email: string;
+  password?: string;
+  role: 'customer' | 'business';
+  preferredCity?: string;
+  businessCategory?: string;
+  businessWorkerCount?: number;
+}) {
+  const res = await fetch(`${API_BASE}/api/auth/signup`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error('Failed to signup');
+  return (await res.json()) as { user: AuthApiUser };
+}
+
+export async function demoAuthApi(role: 'customer' | 'business' | 'admin') {
+  const res = await fetch(`${API_BASE}/api/auth/demo`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ role }),
+  });
+  if (!res.ok) throw new Error('Failed to load demo user');
+  return (await res.json()) as { user: AuthApiUser };
+}
+
 export type CustomerDashboardOpts = {
   city?: string;
   preferredCity?: string;
@@ -35,12 +94,14 @@ export async function getBusinessDashboardWithContext(params?: {
   lng?: number;
   radiusKm?: number;
   vertical?: string;
+  workerCount?: number;
 }) {
   const q = new URLSearchParams();
   if (params?.lat != null) q.set('lat', String(params.lat));
   if (params?.lng != null) q.set('lng', String(params.lng));
   if (params?.radiusKm != null) q.set('radiusKm', String(params.radiusKm));
   if (params?.vertical) q.set('vertical', params.vertical);
+  if (params?.workerCount != null) q.set('workerCount', String(params.workerCount));
   const suffix = q.toString() ? `?${q.toString()}` : '';
   const res = await fetch(`${API_BASE}/api/dashboard/business${suffix}`);
   if (!res.ok) throw new Error('Failed to load business dashboard');
@@ -59,6 +120,46 @@ export async function getBusinessBookings() {
   if (!res.ok) throw new Error('Failed to load business bookings');
   const data = await res.json();
   return data.items ?? [];
+}
+
+export async function updateBusinessBookingStatus(
+  bookingId: string,
+  status: 'requested' | 'pending' | 'confirmed' | 'in-salon' | 'done' | 'no-show' | 'cancelled',
+) {
+  const res = await fetch(`${API_BASE}/api/bookings/business/${encodeURIComponent(bookingId)}/status`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status }),
+  });
+  if (!res.ok) throw new Error(await readErrorMessage(res, 'Failed to update booking status'));
+  return res.json();
+}
+
+export async function createBookingApi(payload: {
+  listingSlug: string;
+  serviceName: string;
+  slotLabel: string;
+  guestName: string;
+  phone: string;
+  userId?: string;
+  channel?: string;
+  notes?: string;
+}) {
+  const res = await fetch(`${API_BASE}/api/bookings`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error(await readErrorMessage(res, 'Failed to create booking'));
+  return (await res.json()) as {
+    _id?: string;
+    listingSlug: string;
+    serviceName: string;
+    slotLabel: string;
+    guestName: string;
+    phone: string;
+    status: string;
+  };
 }
 
 export async function getListings() {

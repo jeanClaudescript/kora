@@ -10,6 +10,7 @@ const listingRoutes = require('./routes/listing.routes');
 const dashboardRoutes = require('./routes/dashboard.routes');
 const bookingRoutes = require('./routes/booking.routes');
 const threadRoutes = require('./routes/thread.routes');
+const authRoutes = require('./routes/auth.routes');
 
 function createApp({ db }) {
   const app = express();
@@ -31,6 +32,7 @@ function createApp({ db }) {
   app.use('/api', dashboardRoutes);
   app.use('/api', bookingRoutes);
   app.use('/api', threadRoutes);
+  app.use('/api', authRoutes);
 
   app.use((_req, res) => res.status(404).json({ error: 'Route not found' }));
   app.use((err, _req, res, _next) =>
