@@ -1,16 +1,44 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
+import { getThreads } from '../../lib/api'
 
-const threads = [
+const staticThreads = [
   { id: '1', biz: 'Amahoro Glow Salon', last: 'We moved you to 11:15 ✓', time: '10:12', unread: 1 },
   { id: '2', biz: 'Kigali Cuts', last: 'See you Friday!', time: 'Yesterday', unread: 0 },
 ]
 
+type ThreadApiItem = {
+  id?: string
+  _id?: string
+  business?: string
+  lastMessage?: string
+  time?: string
+  unread?: number
+}
+
 export function AccountMessagesPage() {
   const { t } = useTranslation()
-  const [active, setActive] = useState(threads[0].id)
+  const [threads, setThreads] = useState(staticThreads)
+  const [active, setActive] = useState(staticThreads[0].id)
   const th = threads.find((x) => x.id === active) ?? threads[0]
+
+  useEffect(() => {
+    getThreads()
+      .then((data) => {
+        if (!data?.items?.length) return
+        const mapped = (data.items as ThreadApiItem[]).map((item) => ({
+          id: String(item.id ?? item._id),
+          biz: item.business ?? 'Business',
+          last: item.lastMessage ?? '',
+          time: item.time ?? 'now',
+          unread: item.unread ?? 0,
+        }))
+        setThreads(mapped)
+        setActive(mapped[0].id)
+      })
+      .catch(() => undefined)
+  }, [])
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8">

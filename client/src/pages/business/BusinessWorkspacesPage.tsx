@@ -77,15 +77,29 @@ export function BusinessWorkspacesPage() {
   const workerTarget = Math.min((access?.workerCount ?? user?.businessWorkerCount ?? 24) + extraWorkers, 100)
   const categoryId = initialCategory
   const [selectedWorkerId, setSelectedWorkerId] = useState<string | null>(null)
+  const [stateFilter, setStateFilter] = useState<'all' | WorkerState>('all')
+  const [hiringStage, setHiringStage] = useState<'applicants' | 'screening' | 'trial' | 'offer'>('applicants')
+  const [candidateName, setCandidateName] = useState('')
+  const [nextEtaMinutes, setNextEtaMinutes] = useState(15)
+  const [taskNote, setTaskNote] = useState('')
+  const [helperTip, setHelperTip] = useState('Mark your state after every service to keep bookings accurate.')
+  const [pipelineCounts, setPipelineCounts] = useState({
+    applicants: 12,
+    screening: 5,
+    trial: 2,
+    offer: 1,
+  })
   const [workersByCategory, setWorkersByCategory] = useState<Record<string, Worker[]>>(() => ({
     [initialCategory]: buildWorkers(initialCategory, workerTarget),
   }))
 
   const workers = workersByCategory[categoryId] ?? buildWorkers(categoryId, workerTarget)
-  const visibleWorkers =
+  const scopedWorkers =
     access?.session.mode === 'worker'
       ? workers.filter((w) => w.id === access.session.workerId)
       : workers
+  const visibleWorkers =
+    stateFilter === 'all' ? scopedWorkers : scopedWorkers.filter((w) => w.state === stateFilter)
   const selectedWorker = visibleWorkers.find((w) => w.id === selectedWorkerId) ?? visibleWorkers[0]
 
   function updateWorkerState(workerId: string, nextState: WorkerState) {
@@ -116,6 +130,20 @@ export function BusinessWorkspacesPage() {
   const workspaceTemplate = categoryRoleMap[categoryId]
     ? 'Specialized workflow'
     : 'General workflow'
+  const loadPct = Math.round(((counts.booked + counts.external) / Math.max(workers.length, 1)) * 100)
+  const overtimeRisk = loadPct >= 80 ? 'high' : loadPct >= 65 ? 'medium' : 'low'
+
+  function addCandidate() {
+    if (!candidateName.trim()) return
+    setPipelineCounts((prev) => ({ ...prev, [hiringStage]: prev[hiringStage] + 1 }))
+    setCandidateName('')
+  }
+
+  function applyQuickMode(nextState: WorkerState, tip: string) {
+    if (!selectedWorker) return
+    updateWorkerState(selectedWorker.id, nextState)
+    setHelperTip(tip)
+  }
 
   return (
     <div className="space-y-6">
@@ -166,6 +194,73 @@ export function BusinessWorkspacesPage() {
             </p>
           </div>
         </div>
+        <div className="mt-4 grid gap-3 lg:grid-cols-2">
+          <div className="rounded-2xl border border-[var(--kora-line)] bg-[var(--kora-elevated-muted)]/65 p-4">
+            <p className="text-xs font-black uppercase text-[var(--kora-muted)]">Coverage risk</p>
+            <p className="mt-1 text-base font-black text-[var(--kora-text)]">
+              Team load {loadPct}% · Overtime risk {overtimeRisk}
+            </p>
+            <p className="mt-1 text-xs text-[var(--kora-text-secondary)]">
+              Keep 10-12 minute buffers after long services and reserve one floating worker for walk-ins during peak hours.
+            </p>
+          </div>
+          {access?.canManage ? (
+            <div className="rounded-2xl border border-[var(--kora-line)] bg-[var(--kora-elevated-muted)]/65 p-4">
+              <p className="text-xs font-black uppercase text-[var(--kora-muted)]">Hiring pipeline (admin only)</p>
+              <div className="mt-2 grid grid-cols-4 gap-2 text-center">
+                <div className="rounded-lg bg-white/80 p-2 dark:bg-zinc-900/60">
+                  <p className="text-[10px] font-bold uppercase text-[var(--kora-muted)]">Applicants</p>
+                  <p className="text-sm font-black text-[var(--kora-text)]">{pipelineCounts.applicants}</p>
+                </div>
+                <div className="rounded-lg bg-white/80 p-2 dark:bg-zinc-900/60">
+                  <p className="text-[10px] font-bold uppercase text-[var(--kora-muted)]">Screen</p>
+                  <p className="text-sm font-black text-[var(--kora-text)]">{pipelineCounts.screening}</p>
+                </div>
+                <div className="rounded-lg bg-white/80 p-2 dark:bg-zinc-900/60">
+                  <p className="text-[10px] font-bold uppercase text-[var(--kora-muted)]">Trial</p>
+                  <p className="text-sm font-black text-[var(--kora-text)]">{pipelineCounts.trial}</p>
+                </div>
+                <div className="rounded-lg bg-white/80 p-2 dark:bg-zinc-900/60">
+                  <p className="text-[10px] font-bold uppercase text-[var(--kora-muted)]">Offer</p>
+                  <p className="text-sm font-black text-[var(--kora-text)]">{pipelineCounts.offer}</p>
+                </div>
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <select
+                  value={hiringStage}
+                  onChange={(e) => setHiringStage(e.target.value as typeof hiringStage)}
+                  className="kora-input w-40 py-2 text-xs"
+                >
+                  <option value="applicants">Applicants</option>
+                  <option value="screening">Screening</option>
+                  <option value="trial">Trial shift</option>
+                  <option value="offer">Offer</option>
+                </select>
+                <input
+                  value={candidateName}
+                  onChange={(e) => setCandidateName(e.target.value)}
+                  placeholder="Candidate name"
+                  className="kora-input max-w-[190px] py-2 text-xs"
+                />
+                <button
+                  type="button"
+                  onClick={addCandidate}
+                  className="rounded-lg bg-indigo-600 px-3 py-2 text-xs font-bold text-white hover:bg-indigo-500"
+                >
+                  Add candidate
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-[var(--kora-line)] bg-[var(--kora-elevated-muted)]/65 p-4">
+              <p className="text-xs font-black uppercase text-[var(--kora-muted)]">Worker helper</p>
+              <p className="mt-1 text-sm font-bold text-[var(--kora-text)]">Hiring is admin-only</p>
+              <p className="mt-1 text-xs text-[var(--kora-text-secondary)]">
+                Your focus: keep state updated, share ETA changes quickly, and reduce guest wait-time surprises.
+              </p>
+            </div>
+          )}
+        </div>
         {access?.canManage ? (
           <div className="mt-3 flex items-center gap-2">
             <button
@@ -186,7 +281,19 @@ export function BusinessWorkspacesPage() {
         <div className="kora-card rounded-2xl p-3">
           <div className="flex items-center justify-between px-2 pb-2">
             <p className="text-sm font-bold text-[var(--kora-text)]">Workers ({visibleWorkers.length})</p>
-            <p className="text-xs text-[var(--kora-muted)]">Instant scroll list</p>
+            <div className="flex items-center gap-2">
+              <select
+                value={stateFilter}
+                onChange={(e) => setStateFilter(e.target.value as typeof stateFilter)}
+                className="rounded-lg border border-[var(--kora-line)] bg-[var(--kora-elevated)] px-2 py-1 text-[11px] font-semibold text-[var(--kora-text)]"
+              >
+                <option value="all">All states</option>
+                <option value="free">Free</option>
+                <option value="booked">Booked</option>
+                <option value="external">External</option>
+                <option value="break">Break</option>
+              </select>
+            </div>
           </div>
           <div className="max-h-[640px] space-y-2 overflow-y-auto pr-1">
             {visibleWorkers.map((worker) => (
@@ -281,6 +388,70 @@ export function BusinessWorkspacesPage() {
                     Break
                   </button>
                 </div>
+              </div>
+              <div className="rounded-xl border border-indigo-200 bg-indigo-50/70 p-3 dark:border-indigo-900/40 dark:bg-indigo-950/20">
+                <p className="text-sm font-bold text-[var(--kora-text)]">Availability + time helper</p>
+                <p className="mt-1 text-xs text-[var(--kora-text-secondary)]">
+                  Simple workflow to keep booking times reliable for guests and front desk.
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      applyQuickMode('booked', 'In service: set realistic ETA now and update if you pass that time.')
+                    }
+                    className="rounded-lg bg-orange-500 px-3 py-1.5 text-xs font-bold text-white hover:bg-orange-400"
+                  >
+                    Start service
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => applyQuickMode('external', 'External job: mark return ETA so new bookings stay safe.')}
+                    className="rounded-lg bg-sky-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-sky-500"
+                  >
+                    Go external
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => applyQuickMode('free', 'Free now: accept next booking or nearest walk-in slot.')}
+                    className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-500"
+                  >
+                    Ready now
+                  </button>
+                </div>
+                <div className="mt-3 grid gap-2 sm:grid-cols-[160px_1fr_auto]">
+                  <select
+                    value={nextEtaMinutes}
+                    onChange={(e) => setNextEtaMinutes(Number(e.target.value))}
+                    className="kora-input py-2 text-xs"
+                  >
+                    <option value={10}>ETA 10 min</option>
+                    <option value={15}>ETA 15 min</option>
+                    <option value={20}>ETA 20 min</option>
+                    <option value={30}>ETA 30 min</option>
+                    <option value={45}>ETA 45 min</option>
+                  </select>
+                  <input
+                    value={taskNote}
+                    onChange={(e) => setTaskNote(e.target.value)}
+                    className="kora-input py-2 text-xs"
+                    placeholder="Quick note: finishing braids, 2 chairs ahead..."
+                  />
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setHelperTip(
+                        `ETA shared: around ${nextEtaMinutes} min${taskNote.trim() ? ` · note: ${taskNote.trim()}` : ''}`,
+                      )
+                    }
+                    className="rounded-lg bg-indigo-600 px-3 py-2 text-xs font-bold text-white hover:bg-indigo-500"
+                  >
+                    Share ETA
+                  </button>
+                </div>
+                <p className="mt-2 rounded-lg border border-indigo-200/80 bg-white/80 px-2.5 py-2 text-xs font-semibold text-indigo-800 dark:border-indigo-900/40 dark:bg-zinc-900/60 dark:text-indigo-200">
+                  {helperTip}
+                </p>
               </div>
               <div className="rounded-xl border border-[var(--kora-line)] bg-[var(--kora-elevated-muted)] p-3">
                 <p className="text-sm font-bold text-[var(--kora-text)]">Admin conversation panel</p>

@@ -50,7 +50,7 @@ export function SiteFooter() {
   ]
 
   return (
-    <footer className="border-t border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+    <footer className="border-t border-slate-200 bg-gradient-to-b from-white via-fuchsia-50/30 to-white dark:border-slate-800 dark:bg-gradient-to-b dark:from-slate-900 dark:via-slate-900 dark:to-slate-900">
       <div className="mx-auto max-w-7xl px-4 py-12">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-5">
           <div className="lg:col-span-1">
@@ -74,6 +74,12 @@ export function SiteFooter() {
                 {t('footer.payWa')}
               </span>
             </div>
+            <a
+              href="application-22fa0176-41e6-4353-91e8-112e185f942a.apk"
+              className="mt-5 inline-flex rounded-xl bg-gradient-to-r from-violet-600 via-fuchsia-600 to-pink-600 px-4 py-2.5 text-sm font-black text-white shadow-lg hover:brightness-105"
+            >
+              Download App
+            </a>
           </div>
           {cols.map((c) => (
             <div key={c.titleKey}>

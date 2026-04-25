@@ -1,9 +1,10 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { categories, searchListings } from '../data/catalog'
+import { categories, listings } from '../data/catalog'
 import { ListingCard } from '../components/marketplace/ListingCard'
 import { IconSearch } from '../components/icons'
+import { searchListingsApi } from '../lib/api'
 
 export function SearchPage() {
   const [params] = useSearchParams()
@@ -18,11 +19,13 @@ function SearchPageInner() {
 
   const [localQ, setLocalQ] = useState(q)
   const [localCity, setLocalCity] = useState(city)
+  const [results, setResults] = useState(listings)
 
-  const results = useMemo(
-    () => searchListings({ q, category, city }),
-    [q, category, city],
-  )
+  useEffect(() => {
+    searchListingsApi({ q, category: category === 'all' ? '' : category, city })
+      .then((items) => setResults(items))
+      .catch(() => setResults([]))
+  }, [q, category, city])
 
   function applyFilters(e: FormEvent) {
     e.preventDefault()

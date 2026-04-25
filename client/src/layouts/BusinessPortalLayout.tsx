@@ -6,8 +6,8 @@ import { useAuth } from '../auth/AuthContext'
 function sideLink({ isActive }: { isActive: boolean }) {
   return `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition ${
     isActive
-      ? 'bg-white/15 text-white shadow-inner ring-1 ring-white/10'
-      : 'text-emerald-100/80 hover:bg-white/5 hover:text-white'
+      ? 'bg-white/18 text-white shadow-inner ring-1 ring-white/15'
+      : 'text-white/70 hover:bg-white/8 hover:text-white'
   }`
 }
 
@@ -135,13 +135,19 @@ export function BusinessPortalLayout() {
   }
 
   return (
-    <div className="flex min-h-dvh gap-4 bg-[var(--kora-canvas)] px-3 py-3 font-[var(--rb-font)] text-[var(--kora-text)] sm:px-4">
+    <div className="relative flex min-h-dvh gap-4 overflow-hidden bg-[var(--kora-canvas)] px-3 py-3 font-[var(--rb-font)] text-[var(--kora-text)] sm:px-4">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_20%_0%,rgba(236,72,153,0.14),transparent_45%),radial-gradient(circle_at_80%_10%,rgba(59,130,246,0.12),transparent_42%),radial-gradient(circle_at_50%_100%,rgba(16,185,129,0.10),transparent_50%)]"
+      />
       <aside className="relative hidden w-64 shrink-0 lg:block">
-        <div className="sticky top-3 flex max-h-[calc(100dvh-1.5rem)] flex-col overflow-hidden rounded-3xl border border-emerald-900/60 bg-gradient-to-b from-emerald-950 via-zinc-950 to-zinc-950 shadow-2xl">
+        <div className="sticky top-3 flex max-h-[calc(100dvh-1.5rem)] flex-col overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-[#0b1020] via-[#0f172a] to-[#020617] shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
           <div className="border-b border-white/10 px-5 py-6">
             <Link to="/business" className="flex items-center gap-2">
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 text-lg font-black text-white shadow-lg">
-                K
+              <span className="relative flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-fuchsia-500 via-violet-600 to-sky-500 p-[2px] shadow-lg shadow-fuchsia-500/25">
+                <span className="flex h-full w-full items-center justify-center rounded-[0.9rem] bg-[#0b1020] text-lg font-black text-white">
+                  K
+                </span>
               </span>
               <div>
                 <p className="text-xs font-bold uppercase tracking-wider text-emerald-300/90">
@@ -218,61 +224,94 @@ export function BusinessPortalLayout() {
         </div>
       </aside>
 
-      <div className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-3xl border border-[var(--kora-line)] bg-[var(--kora-elevated)]">
-        <header className="sticky top-0 z-20 border-b border-[var(--kora-line)] bg-gradient-to-r from-[var(--kora-elevated)] via-[var(--kora-elevated-muted)] to-[var(--kora-elevated)]/95 px-4 py-3 backdrop-blur">
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-3xl border border-[var(--kora-line)] bg-[var(--kora-elevated)]/92 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:bg-[var(--kora-elevated)]/88 dark:shadow-[0_18px_50px_rgba(0,0,0,0.55)]">
+        <header className="sticky top-0 z-20 border-b border-[var(--kora-line)]/80 bg-[var(--kora-elevated)]/90 px-4 py-2.5 shadow-[0_8px_30px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:bg-[var(--kora-elevated)]/75">
+          <div className="mx-auto mb-2 hidden max-w-6xl items-center justify-between rounded-2xl border border-[var(--kora-line)]/70 bg-[var(--kora-elevated-muted)]/65 px-3 py-1.5 text-[11px] font-semibold text-[var(--kora-text-secondary)] md:flex">
+            <p>Business command center</p>
+            <p className="text-emerald-600 dark:text-emerald-300">{canManage ? 'Admin mode active' : 'Worker mode active'}</p>
+          </div>
           <div className="mx-auto flex max-w-6xl items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-3">
-              <div className="flex gap-1 overflow-x-auto pb-1 lg:hidden">
+              <Link to="/business" className="hidden items-center gap-2 rounded-xl border border-[var(--kora-line)] bg-[var(--kora-elevated)] px-2.5 py-1.5 lg:flex">
+                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-fuchsia-600 via-violet-600 to-sky-500 text-xs font-black text-white shadow-sm">
+                  K
+                </span>
+                <span className="leading-tight">
+                  <span className="block text-xs font-black text-[var(--kora-text)]">Kora Business</span>
+                  <span className="block text-[10px] text-[var(--kora-text-secondary)]">Live operations</span>
+                </span>
+              </Link>
+              <div className="flex items-center gap-1 overflow-x-auto pb-1 lg:hidden">
                 <NavLink
                   to={canManage ? '/business' : '/business/workspaces'}
-                  className="shrink-0 rounded-full bg-emerald-600 px-3 py-1 text-xs font-bold text-white"
+                  aria-label={canManage ? t('business.navOverview') : t('business.navWorkspaces')}
+                  title={canManage ? t('business.navOverview') : t('business.navWorkspaces')}
+                  className="shrink-0 rounded-full bg-gradient-to-r from-fuchsia-600 to-violet-600 p-2 text-sm font-bold text-white shadow-sm"
                 >
-                  {canManage ? t('business.navOverview') : t('business.navWorkspaces')}
+                  {canManage ? '◎' : '🧩'}
                 </NavLink>
                 {canManage ? (
                   <>
                     <NavLink
                       to="/business/insights"
-                      className="shrink-0 rounded-full border border-zinc-200 px-3 py-1 text-xs font-bold dark:border-zinc-700"
+                      aria-label={t('business.navInsights')}
+                      title={t('business.navInsights')}
+                      className="shrink-0 rounded-full border border-[var(--kora-line)] bg-[var(--kora-elevated-muted)]/80 p-2 text-sm font-bold text-[var(--kora-text)]"
                     >
-                      {t('business.navInsights')}
+                      ◆
                     </NavLink>
                     <NavLink
                       to="/business/bookings"
-                      className="shrink-0 rounded-full border border-zinc-200 px-3 py-1 text-xs font-bold dark:border-zinc-700"
+                      aria-label={t('business.navBookings')}
+                      title={t('business.navBookings')}
+                      className="shrink-0 rounded-full border border-[var(--kora-line)] bg-[var(--kora-elevated-muted)]/80 p-2 text-sm font-bold text-[var(--kora-text)]"
                     >
-                      {t('business.navBookings')}
+                      ▤
                     </NavLink>
                     <NavLink
                       to="/business/messages"
-                      className="shrink-0 rounded-full border border-zinc-200 px-3 py-1 text-xs font-bold dark:border-zinc-700"
+                      aria-label={t('business.navMessages')}
+                      title={t('business.navMessages')}
+                      className="shrink-0 rounded-full border border-[var(--kora-line)] bg-[var(--kora-elevated-muted)]/80 p-2 text-sm font-bold text-[var(--kora-text)]"
                     >
-                      {t('business.navMessages')}
+                      💬
                     </NavLink>
                   </>
                 ) : null}
                 <NavLink
                   to="/business/workspaces"
-                  className="shrink-0 rounded-full border border-zinc-200 px-3 py-1 text-xs font-bold dark:border-zinc-700"
+                  aria-label={t('business.navWorkspaces')}
+                  title={t('business.navWorkspaces')}
+                  className="shrink-0 rounded-full border border-[var(--kora-line)] bg-[var(--kora-elevated-muted)]/80 p-2 text-sm font-bold text-[var(--kora-text)]"
                 >
-                  {t('business.navWorkspaces')}
+                  🧩
                 </NavLink>
               </div>
-              <p className="hidden text-sm font-semibold text-zinc-500 dark:text-zinc-400 lg:block">
+              <p className="hidden text-sm font-semibold text-[var(--kora-text-secondary)] xl:block">
                 {canManage
                   ? t('business.welcome', { name: user?.name ?? '' })
                   : `Worker room · ${activeSession.workerName ?? ''}`}
               </p>
-              <span className="hidden rounded-full border border-emerald-400/40 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-300 lg:inline-flex">
+              <span className="hidden rounded-full border border-emerald-400/35 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-300 xl:inline-flex">
                 {canManage ? 'Admin access' : 'Worker access'}
               </span>
             </div>
-            <Link
-              to="/"
-              className="shrink-0 rounded-full border border-zinc-200 bg-white px-4 py-2 text-xs font-bold text-zinc-800 shadow-sm hover:border-emerald-300 hover:text-emerald-800 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:border-emerald-500"
-            >
-              {t('business.viewMarketplace')}
-            </Link>
+            <div className="flex shrink-0 items-center gap-2">
+              <Link
+                to="/"
+                className="rounded-full border border-[var(--kora-line)] bg-[var(--kora-elevated)] px-4 py-2 text-xs font-bold text-[var(--kora-text)] shadow-sm transition hover:border-fuchsia-300 hover:text-fuchsia-700 dark:hover:border-fuchsia-500 dark:hover:text-fuchsia-300"
+              >
+                {t('business.viewMarketplace')}
+              </Link>
+              {canManage ? (
+                <Link
+                  to="/business/workspaces"
+                  className="rounded-full bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:brightness-105"
+                >
+                  Hire + team
+                </Link>
+              ) : null}
+            </div>
           </div>
         </header>
         <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 sm:py-8">
